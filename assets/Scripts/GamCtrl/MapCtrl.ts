@@ -14,13 +14,13 @@ export default class MapCtrl extends cc.Component {
 
     // onLoad () {}
     onEnable() {
-        cc.director.on(InputType[InputType.Click], this.onClick, this);
-        cc.director.on(InputType[InputType.Drag], this.onDrag, this);
+        cc.director.on(InputType[InputType.Click] + this.node.name, this.onClick, this);
+        cc.director.on(InputType[InputType.Drag] + this.node.name, this.onDrag, this);
     }
 
     onDisable() {
-        cc.director.off(InputType[InputType.Click], this.onClick);
-        cc.director.off(InputType[InputType.Drag], this.onDrag);
+        cc.director.off(InputType[InputType.Click] + this.node.name, this.onClick);
+        cc.director.off(InputType[InputType.Drag] + this.node.name, this.onDrag);
     }
     start() {
         GameDataRuntime.MapSize = this.getComponent(cc.TiledMap).getMapSize();

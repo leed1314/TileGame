@@ -59,12 +59,12 @@ export default class BhvInputMap extends cc.Component {
         if (e.getID() !== this.startTouchId) return;
         this.isTouching = true;
         var delta = e.getDelta();
-        if(delta.equals(cc.Vec2.ZERO) == true){
+        if (delta.equals(cc.Vec2.ZERO) == true) {
 
-        }else{
+        } else {
             this.isDoDraging = true;
             console.log(InputType[InputType.Drag], delta.toString());
-            cc.director.emit(InputType[InputType.Drag], e, delta);
+            cc.director.emit(InputType[InputType.Drag] + this.node.name, e, delta);
         }
     }
 
@@ -77,7 +77,7 @@ export default class BhvInputMap extends cc.Component {
         } else {
             if (this.touchEndOrCancelPos.fuzzyEquals(this.startTouchPos, 2.33) && this.duration < 0.233) {
                 console.log(InputType[InputType.Click], this.touchEndOrCancelPos.equals(this.startTouchPos), this.duration);
-                cc.director.emit(InputType[InputType.Click], e, this.touchEndOrCancelPos);
+                cc.director.emit(InputType[InputType.Click] + this.node.name, e, this.touchEndOrCancelPos);
             } else if (this.touchEndOrCancelPos.fuzzyEquals(this.startTouchPos, 2.33) && this.duration >= 0.233) {
                 console.log(InputType[InputType.Hold], this.touchEndOrCancelPos.equals(this.startTouchPos), this.duration);
             } else {
