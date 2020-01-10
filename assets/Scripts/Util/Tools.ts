@@ -66,7 +66,7 @@ export function MapNum(targetNum, srcStart, srcEnd, targetStart, targetEnd) {
  * @param fromParentNode 需要转换的节点的父节点
  * @param toParentNode 目标节点
  */
-export function convertLocalToAnotherLocal(childPosFromParentNode, fromParentNode, toParentNode) {
+export function convertLocalToAnotherLocal(childPosFromParentNode: cc.Vec2, fromParentNode: cc.Node, toParentNode: cc.Node): cc.Vec2 {
     let posInWorld = fromParentNode.convertToWorldSpaceAR(childPosFromParentNode);
     let posInNode = toParentNode.convertToNodeSpaceAR(posInWorld);
     return posInNode;

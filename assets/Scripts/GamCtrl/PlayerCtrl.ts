@@ -2,6 +2,8 @@ import MapCtrl from "./MapCtrl";
 import BhvMove from "./BhvMove";
 import { TruncateByVec2Mag } from "../Util/Tools";
 import VMEvent from "../Mvvm/VMEvent";
+import ShipConnon from "./ShipConnon";
+import { GrounpType } from "./ConnonBullet";
 
 const { ccclass, property } = cc._decorator;
 export enum ShipBhvType {
@@ -27,10 +29,13 @@ export default class PlayerCtrl extends cc.Component {
 
     currentPathList: Array<cc.Vec2> = null;
     currentRunningBhv: ShipBhvType = -1;
+
+    @property(ShipConnon)
+    leftFrontConnon: ShipConnon = null;
     // onLoad () {}
 
     start() {
-
+        this.leftFrontConnon.init(this.node.uuid, GrounpType.Player);
     }
 
     update(dt) {
@@ -106,6 +111,8 @@ export default class PlayerCtrl extends cc.Component {
         var posNext = posNow.add(posOffset);
         this.node.position = posNext;
         // 计算朝向（角度）
+        // this.node.angle --- for 2.1.0+
+        // this.node.rotation
         var angle = this.node.angle * Math.PI / 180;
         var currentVHeading = cc.Vec2.UP.negSelf().rotate(angle);
         var headingThisMoment = currentVHeading.lerp(this.vVelocity.normalize(), dt * this.MaxTurnRate);
@@ -136,7 +143,7 @@ export default class PlayerCtrl extends cc.Component {
     DrawMovePath(path: Array<cc.Vec2>) {
         if (path.length > 0) {
             let mapCtrlTs = cc.find("Canvas/TiledMap").getComponent(MapCtrl);
-            let pathGraphics = cc.find("Canvas/playerSpawn/SailPathGrap").getComponent(cc.Graphics);
+            let pathGraphics = cc.find("Canvas/playerSpawn/SailPathGraphics").getComponent(cc.Graphics);
             pathGraphics.clear();
             for (var i = 0; i < path.length; i++) {
                 console.log("path", i, path[i].toString());
