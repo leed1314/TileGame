@@ -61,6 +61,19 @@ export function MapNum(targetNum, srcStart, srcEnd, targetStart, targetEnd) {
     return targetStart + targetOffset / srcArea * targetArea;
 };
 /**
+ * 返回 点p 在 a,b 上的法线点
+ * @param p 
+ * @param a 
+ * @param b 
+ */
+export function getNormalPoint(p: cc.Vec2, a: cc.Vec2, b: cc.Vec2) {
+    let ap = p.sub(a);
+    let ab = b.sub(a);
+    ab.normalizeSelf();
+    ab.mulSelf(ap.dot(ab));
+    return a.add(ab);
+}
+/**
  * 将一个node下的本地坐标转换为另一个node下的本地坐标 
  * @param childPosFromParentNode  需要转换的节点坐标
  * @param fromParentNode 需要转换的节点的父节点

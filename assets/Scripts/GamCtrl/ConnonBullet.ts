@@ -8,6 +8,10 @@ export enum GrounpType {
 }
 @ccclass
 export default class ConnonBullet extends cc.Component {
+    @property(cc.Prefab)
+    fireHitPaticalPrefab = null;
+    @property(cc.Prefab)
+    splashHitPaticalPrefab = null;
     direction: cc.Vec2 = cc.Vec2.ZERO;
     speed: number = 200;
     damage: number = 1;
@@ -36,11 +40,18 @@ export default class ConnonBullet extends cc.Component {
         }
     }
     splashAndSelfDestory() {
-        // Todo 水花特效
+        //  水花特效
+        let splash:cc.Node = cc.instantiate(this.splashHitPaticalPrefab);
+        splash.position = this.node.position
+        splash.parent = this.node.parent;
         this.node.destroy();
     }
     fireWorkAndSelfDestory() {
-        // Todo  烟花特效
+        //  烟花特效
+        let fire:cc.Node = cc.instantiate(this.fireHitPaticalPrefab);
+        fire.getComponent(cc.ParticleSystem).gravity = this.direction.normalize().mul(this.speed);
+        fire.position = this.node.position
+        fire.parent = this.node.parent;
         this.node.destroy();
     }
     /**

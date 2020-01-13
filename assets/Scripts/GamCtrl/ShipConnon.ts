@@ -7,8 +7,10 @@ const { ccclass, property } = cc._decorator;
 export default class ShipConnon extends cc.Component {
     @property(cc.Prefab)
     connonBullet: cc.Prefab = null;
+    @property(cc.Prefab)
+    connonFireworkPrefab: cc.Prefab = null;
     // LIFE-CYCLE CALLBACKS:
-    speed: number = 200;
+    speed: number = 150;
     damage: number = 1;
     shotRange: number = 300;
     reloadTime: number = 3.0;
@@ -58,11 +60,16 @@ export default class ShipConnon extends cc.Component {
             let selfBulletSpawnPosInMap = convertLocalToAnotherLocal(selfBulletSpawnPosNode.position, selfBulletSpawnPosNode.parent, mapNode);
             let shotDirection = targetPos.sub(selfPosInMap);
             console.log("fire from", selfPosInMap.toString(), "to", targetPos.toString(), "shotDir", shotDirection.toString());
+            this.node.getComponent(cc.Animation).play("ConnonFireShake");
 
             let cannonBall = cc.instantiate(this.connonBullet);
             cannonBall.getComponent(ConnonBullet).init(shotDirection, shotDirection.mag(), this.speed, this.damage, this.belongToUUid, this.belongTo);
             cannonBall.position = selfBulletSpawnPosInMap;
             bulletSpawnNode.addChild(cannonBall);
+
+            let cannonFirework = cc.instantiate(this.connonFireworkPrefab);
+            cannonFirework.position = cc.Vec2.ZERO;
+            selfBulletSpawnPosNode.addChild(cannonFirework)
         }
     }
 }

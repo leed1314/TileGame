@@ -28,10 +28,13 @@
       },
       {
         "__id__": 5
+      },
+      {
+        "__id__": 6
       }
     ],
     "_prefab": {
-      "__id__": 6
+      "__id__": 7
     },
     "_opacity": 255,
     "_color": {
@@ -55,8 +58,8 @@
       "__type__": "TypedArray",
       "ctor": "Float64Array",
       "array": [
-        11.944,
-        -1.7,
+        0,
+        0,
         0,
         0,
         0,
@@ -115,7 +118,7 @@
       "__type__": "TypedArray",
       "ctor": "Float64Array",
       "array": [
-        0,
+        7.632,
         0,
         0,
         0,
@@ -194,6 +197,26 @@
     "connonBullet": {
       "__uuid__": "dc75fa4f-ceaa-4704-af67-528a1ddd9a7d"
     },
+    "connonFireworkPrefab": {
+      "__uuid__": "6a0cef2b-3396-4b7a-a26d-c835943d25c5"
+    },
+    "_id": ""
+  },
+  {
+    "__type__": "cc.Animation",
+    "_name": "",
+    "_objFlags": 0,
+    "node": {
+      "__id__": 1
+    },
+    "_enabled": true,
+    "_defaultClip": null,
+    "_clips": [
+      {
+        "__uuid__": "21860010-a9b1-4220-b53c-f13e5e83dc83"
+      }
+    ],
+    "playOnLoad": false,
     "_id": ""
   },
   {
