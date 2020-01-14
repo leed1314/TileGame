@@ -3,7 +3,7 @@
   "_name": "ConnonFirework",
   "_objFlags": 0,
   "_native": "",
-  "_duration": 0.3333333333333333,
+  "_duration": 0.2,
   "sample": 60,
   "speed": 1,
   "wrapMode": 1,
@@ -27,7 +27,7 @@
           }
         },
         {
-          "frame": 0.3,
+          "frame": 0.2,
           "value": {
             "__type__": "cc.Vec2",
             "x": 1,
@@ -39,7 +39,7 @@
   },
   "events": [
     {
-      "frame": 0.3333333333333333,
+      "frame": 0.2,
       "func": "onAnimationFinshed",
       "params": []
     }

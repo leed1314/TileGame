@@ -35,6 +35,7 @@ export default class BhvFollowPath extends cc.Component {
         if (playerCtrlTs.isInTile(this.getFinshedTile()) == true) { // 意味着已经到达前进节点
             // 到达节点之后而且再无新的节点需要导航，认为导航结束
             this.currentRunningStatus = BhvFollowPathStatus.Finshed;
+            this.DrawMovePath([]);
             return;
         }
         // 意味着没有到达前进节点，则对本段路径进行导航计算
@@ -105,6 +106,9 @@ export default class BhvFollowPath extends cc.Component {
                 }
             }
             pathGraphics.stroke();
+        } else {
+            let pathGraphics = cc.find("Canvas/playerSpawn/SailPathGraphics").getComponent(cc.Graphics);
+            pathGraphics.clear();
         }
     }
 }

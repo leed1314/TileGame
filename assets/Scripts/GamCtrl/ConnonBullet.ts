@@ -1,5 +1,6 @@
 import EnemyCtrl from "./EnemyCtrl";
 import PlayerCtrl from "./PlayerCtrl";
+import GameInfoNotice, { infoDamage } from "./GameInfoNotice";
 
 const { ccclass, property } = cc._decorator;
 export enum GrounpType {
@@ -13,10 +14,11 @@ export default class ConnonBullet extends cc.Component {
     @property(cc.Prefab)
     splashHitPaticalPrefab = null;
     direction: cc.Vec2 = cc.Vec2.ZERO;
-    speed: number = 200;
+    speed: number = 1;
     damage: number = 1;
-    shotDistance: number = 300;
+    shotDistance: number = 1;
     shotUnitUUid: string = null;
+    belongToShipName: string = null;
     belongGroup: GrounpType = -1;
 
     flyDistance: cc.Vec2 = cc.Vec2.ZERO;
@@ -41,14 +43,14 @@ export default class ConnonBullet extends cc.Component {
     }
     splashAndSelfDestory() {
         //  水花特效
-        let splash:cc.Node = cc.instantiate(this.splashHitPaticalPrefab);
+        let splash: cc.Node = cc.instantiate(this.splashHitPaticalPrefab);
         splash.position = this.node.position
         splash.parent = this.node.parent;
         this.node.destroy();
     }
     fireWorkAndSelfDestory() {
         //  烟花特效
-        let fire:cc.Node = cc.instantiate(this.fireHitPaticalPrefab);
+        let fire: cc.Node = cc.instantiate(this.fireHitPaticalPrefab);
         fire.getComponent(cc.ParticleSystem).gravity = this.direction.normalize().mul(this.speed);
         fire.position = this.node.position
         fire.parent = this.node.parent;
@@ -61,13 +63,14 @@ export default class ConnonBullet extends cc.Component {
      * @param speed 飞多快
      * @param damage 造成多少伤害
      */
-    init(direction: cc.Vec2, shotDistance: number, speed: number, damage: number, shotUnitUUid: string, belongGroup: GrounpType) {
+    init(direction: cc.Vec2, shotDistance: number, speed: number, damage: number, shotUnitUUid: string, belongGroup: GrounpType, belongToShipName: string) {
         this.shotDistance = shotDistance;
         this.direction = direction;
         this.speed = speed;
         this.damage = damage;
         this.shotUnitUUid = shotUnitUUid;
         this.belongGroup = belongGroup;
+        this.belongToShipName = belongToShipName;
     }
     onCollisionEnter(other, self) {
         console.log("onCollisionEnter", other.node.name, self.node.name);
@@ -91,6 +94,8 @@ export default class ConnonBullet extends cc.Component {
         }
         if (otherNode.getComponent(EnemyCtrl)) {
             console.log("命中 enemy，进行伤害结算");
+            otherNode.getComponent(EnemyCtrl).onHPChange(this.damage * -1);
+            cc.find("Canvas/GameInfoNotice").getComponent(GameInfoNotice).CastGameInfo(new infoDamage(this.belongToShipName, otherNode.getComponent(EnemyCtrl).ShipName, this.damage));
         }
         this.fireWorkAndSelfDestory();
     }

@@ -1,5 +1,6 @@
 import { convertLocalToAnotherLocal } from "../Util/Tools";
 import ConnonBullet, { GrounpType } from "./ConnonBullet";
+import GameInfoNotice, { InfoConnon } from "./GameInfoNotice";
 
 const { ccclass, property } = cc._decorator;
 
@@ -10,32 +11,36 @@ export default class ShipConnon extends cc.Component {
     @property(cc.Prefab)
     connonFireworkPrefab: cc.Prefab = null;
     // LIFE-CYCLE CALLBACKS:
-    speed: number = 150;
+    speed: number = 300;
     damage: number = 1;
-    shotRange: number = 300;
     reloadTime: number = 3.0;
-    runtimeReloadTile: number = 0;
-    isReload: boolean = true;
+    runtimeReloadTime: number = 0;
+    isReload: boolean = false;
     belongToUUid: string = null;
+    belongToShipName: string = null;
     belongTo: GrounpType = -1;
+    ConnonName: string = null;
     // onLoad () {}
 
     start() {
     }
 
     update(dt) {
-        this.aim(new cc.Vec2(200, 200));
-        this.fire(new cc.Vec2(200, 200));
+        // this.aim(new cc.Vec2(200, 200));
+        // this.fire(new cc.Vec2(200, 200));
         if (this.isReload == false) {
-            this.runtimeReloadTile += dt;
-            if (this.runtimeReloadTile >= this.reloadTime) {
+            this.runtimeReloadTime += dt;
+            if (this.runtimeReloadTime >= this.reloadTime) {
                 this.isReload = true;
+                cc.find("Canvas/GameInfoNotice").getComponent(GameInfoNotice).CastGameInfo(new InfoConnon(this.ConnonName, "填装完毕"));
             }
         }
     }
-    init(belongToUUid: string, belongTo: GrounpType) {
+    init(belongToUUid: string, belongTo: GrounpType, belongToShipName: string, ConnonName: string) {
         this.belongToUUid = belongToUUid;
         this.belongTo = belongTo;
+        this.belongToShipName = belongToShipName;
+        this.ConnonName = ConnonName;
     }
     aim(targetPos: cc.Vec2) {
         let mapNode = cc.find("Canvas/TiledMap");
@@ -51,7 +56,7 @@ export default class ShipConnon extends cc.Component {
     fire(targetPos: cc.Vec2) {
         if (this.isReload == true) {
             this.isReload = false;
-            this.runtimeReloadTile = 0;
+            this.runtimeReloadTime = 0;
 
             let mapNode = cc.find("Canvas/TiledMap");
             let bulletSpawnNode = cc.find("Canvas/BulletSpawn");
@@ -59,11 +64,12 @@ export default class ShipConnon extends cc.Component {
             let selfPosInMap = convertLocalToAnotherLocal(this.node.position, this.node.parent, mapNode);
             let selfBulletSpawnPosInMap = convertLocalToAnotherLocal(selfBulletSpawnPosNode.position, selfBulletSpawnPosNode.parent, mapNode);
             let shotDirection = targetPos.sub(selfPosInMap);
+
             console.log("fire from", selfPosInMap.toString(), "to", targetPos.toString(), "shotDir", shotDirection.toString());
             this.node.getComponent(cc.Animation).play("ConnonFireShake");
 
             let cannonBall = cc.instantiate(this.connonBullet);
-            cannonBall.getComponent(ConnonBullet).init(shotDirection, shotDirection.mag(), this.speed, this.damage, this.belongToUUid, this.belongTo);
+            cannonBall.getComponent(ConnonBullet).init(shotDirection, shotDirection.mag(), this.speed, this.damage, this.belongToUUid, this.belongTo, this.belongToShipName);
             cannonBall.position = selfBulletSpawnPosInMap;
             bulletSpawnNode.addChild(cannonBall);
 
