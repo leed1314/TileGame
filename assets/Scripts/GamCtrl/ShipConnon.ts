@@ -12,7 +12,7 @@ export default class ShipConnon extends cc.Component {
     connonFireworkPrefab: cc.Prefab = null;
     // LIFE-CYCLE CALLBACKS:
     speed: number = 300;
-    damage: number = 1;
+    damage: number = 20;
     reloadTime: number = 3.0;
     runtimeReloadTime: number = 0;
     isReload: boolean = false;

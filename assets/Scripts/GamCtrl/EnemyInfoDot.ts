@@ -22,10 +22,10 @@ export default class EnemyInfoDot extends cc.Component {
 
     showColorTipDot(pos: cc.Vec2, size) {
         let isInView = this.isInCanmaerView(pos, size);
-        console.log("showColorTipDot 是否在视野中", isInView);
+        // console.log("showColorTipDot 是否在视野中", isInView);
         if (isInView == false) {
             let colorDotPos = this.getPosInEdge(pos, size, 30);
-            console.log("showColorTipDot 视野边缘的位置", colorDotPos);
+            // console.log("showColorTipDot 视野边缘的位置", colorDotPos);
             let colorDot = cc.instantiate(this.colorTipPrefab);
             colorDot.getComponent(cc.Sprite).spriteFrame = this.colorDotList[Math.floor(Math.random() * this.colorDotList.length)];
             colorDot.position = colorDotPos;
