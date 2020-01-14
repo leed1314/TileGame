@@ -7,6 +7,7 @@ import { GrounpType } from "./ConnonBullet";
 import BhvFollowPath, { BhvFollowPathStatus, ShipPostureType } from "./BhvFollowPath";
 import EnemyCtrl from "./EnemyCtrl";
 import GameInfoNotice, { InfoRadar } from "./GameInfoNotice";
+import EnemyInfoDot from "./EnemyInfoDot";
 
 const { ccclass, property } = cc._decorator;
 export enum ShipBhvType {
@@ -98,6 +99,7 @@ export default class PlayerCtrl extends cc.Component {
                 }
                 if (distance <= this.FireRange * 2) {
                     isAnyOneInRadarRange = true;
+                    cc.find("Canvas/EnemyInfoDot").getComponent(EnemyInfoDot).showColorTipDot(enumyCtrlTs.node.position, 100);
                 }
             }
             if (isAnyOneInRadarRange) {
@@ -172,7 +174,7 @@ export default class PlayerCtrl extends cc.Component {
     fire(firePos: cc.Vec2) {
         this.leftFrontConnon.fire(firePos);
     }
-    aim(firePos: cc.Vec2){
+    aim(firePos: cc.Vec2) {
         this.leftFrontConnon.aim(firePos);
     }
     moveInPath(targetTileIndex: cc.Vec2) {

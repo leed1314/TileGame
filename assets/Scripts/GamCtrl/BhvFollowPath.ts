@@ -2,6 +2,7 @@ import PlayerCtrl, { ShipBhvType } from "./PlayerCtrl";
 import MapCtrl from "./MapCtrl";
 import BhvMove from "./BhvMove";
 import { getNormalPoint } from "../Util/Tools";
+import GameInfoNotice, { InfoSailing } from "./GameInfoNotice";
 
 const { ccclass, property } = cc._decorator;
 export enum BhvFollowPathStatus {
@@ -83,6 +84,10 @@ export default class BhvFollowPath extends cc.Component {
         let mapCtrlTs = cc.find("Canvas/TiledMap").getComponent(MapCtrl);
         let startIndex = mapCtrlTs.convertTileMapNodePositionToTileIndex(this.node.position);
         let pathList = mapCtrlTs.getPathFromTo(startIndex, targetTileIndex);
+        if (pathList.length < 2) {
+            cc.find("Canvas/GameInfoNotice").getComponent(GameInfoNotice).CastGameInfo(new InfoSailing("无法航行到那里"));
+            return;
+        }
         this.currentPathList = pathList;
         this.currentRunningStatus = BhvFollowPathStatus.Working;
         this.DrawMovePath(this.currentPathList);

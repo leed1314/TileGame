@@ -32,6 +32,15 @@ export class InfoRadar {
         return "<color=#6762DD>" + this.info + "</c>";
     }
 }
+export class InfoSailing {
+    info: string = "";
+    constructor(info: string) {
+        this.info = info;
+    }
+    toRichString() {
+        return "<color=##8448A0>" + this.info + "</c>";
+    }
+}
 @ccclass
 export default class GameInfoNotice extends cc.Component {
     @property(cc.Prefab)
