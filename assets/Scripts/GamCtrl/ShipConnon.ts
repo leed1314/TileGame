@@ -32,7 +32,9 @@ export default class ShipConnon extends cc.Component {
             this.runtimeReloadTime += dt;
             if (this.runtimeReloadTime >= this.reloadTime) {
                 this.isReload = true;
-                cc.find("Canvas/GameInfoNotice").getComponent(GameInfoNotice).CastGameInfo(new InfoConnon(this.ConnonName, "填装完毕"));
+                if(GrounpType.Player == this.belongTo){
+                    cc.find("Canvas/GameInfoNotice").getComponent(GameInfoNotice).CastGameInfo(new InfoConnon(this.ConnonName, "填装完毕"));
+                }
             }
         }
     }

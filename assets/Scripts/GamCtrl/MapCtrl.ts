@@ -3,6 +3,7 @@ import { InputType } from "../Input/BhvInputMap";
 import { SearchParameters, AstarPathFinding } from "../Util/AstarPathFinding";
 import BhvMove from "./BhvMove";
 import PlayerCtrl from "./PlayerCtrl";
+import EnemyCtrl from "./EnemyCtrl";
 
 const { ccclass, property } = cc._decorator;
 
@@ -51,6 +52,7 @@ export default class MapCtrl extends cc.Component {
         console.log("clicked tile index ", indexInMap.toString());
 
         cc.find("Canvas/playerSpawn/Player").getComponent(PlayerCtrl).moveInPath(indexInMap);
+        // cc.find("Canvas/playerSpawn/Enemy").getComponent(EnemyCtrl).moveInPath(indexInMap);
     }
     //拖拽
     private onDrag(event: cc.Touch, posDelta: cc.Vec2) {

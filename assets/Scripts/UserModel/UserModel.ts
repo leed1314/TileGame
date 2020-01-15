@@ -46,7 +46,7 @@ export class GameData {
 }
 //原始数据
 export let GameDataRuntime: GameData = new GameData();
-export let PlayerShipModel: ShipModel = new ShipModel(80, 140, 2, "小破船", 300, 500, 100, 100, new CannonModel(true, 300, 15, 3));
+export let PlayerShipModel: ShipModel = new ShipModel(80, 140, 2, "小破船", 300, 500, 100, 100, new CannonModel(true, 300, 20, 3));
 //数据模型绑定,定义后不能修改顺序
 VM.add(GameDataRuntime, 'GameDataRuntime');    //定义全局tag
 VM.add(PlayerShipModel, 'PlayerShipModel');

@@ -1,6 +1,6 @@
 import MapCtrl from "./MapCtrl";
 import BhvMove from "./BhvMove";
-import { TruncateByVec2Mag, localStorageGet, localStorageMap, localStorageSet } from "../Util/Tools";
+import { TruncateByVec2Mag, localStorageGet, localStorageMap, localStorageSet, waitForTime, MapNum } from "../Util/Tools";
 import VMEvent from "../Mvvm/VMEvent";
 import ShipConnon from "./ShipConnon";
 import { GrounpType } from "./ConnonBullet";
@@ -24,8 +24,8 @@ export enum WarnLevel {
 export default class PlayerCtrl extends cc.Component {
 
     // LIFE-CYCLE CALLBACKS:
-    vVelocity: cc.Vec2 = cc.Vec2.ZERO;
-    vHeading: cc.Vec2 = cc.Vec2.ZERO;
+
+
     /**
      * MaxSpeed 和 MaxForce 应在一个合适的比例之下：
      * 如果 MaxSpeed 过大会出现转向时绕大圈，无法到达终点
@@ -33,8 +33,6 @@ export default class PlayerCtrl extends cc.Component {
      */
     MaxSpeed: number = 100; //单位: 像素/秒
     MaxForce: number = 200;
-    MaxTurnRate: number = 10;
-    Mass: number = 1;
     TruningSpeedRatio: number = 5; // 转向加力系数
     radarScanInterval: number = 2; // 雷达扫描间隔
     runtimeRadarScanTime: number = 0;
@@ -50,21 +48,34 @@ export default class PlayerCtrl extends cc.Component {
     // 左舷 前位炮参数
     leftFontConnon: CannonModel = new CannonModel(true, 300, 50, 3);
 
-    @property(ShipConnon)
-    leftFrontConnonTs: ShipConnon = null;
+    @property(cc.Node)
+    leftFrontConnonNode: cc.Node = null;
+
+    @property([cc.Prefab])
+    fireEffectList: Array<cc.Prefab> = [];
+    @property(cc.Node)
+    HpProgressNode: cc.Node = null;
+    @property(cc.Node)
+    fireEffectNode: cc.Node = null;
     // onLoad () {}
 
     start() {
         this.loadShipModelFromLocal();
 
         if (this.leftFontConnon.isActive == true) {
-            this.leftFrontConnonTs.init(this.node.uuid, GrounpType.Player, this.ShipName, "左舷前位炮", this.leftFontConnon.bulletSpeed, this.leftFontConnon.bulletDamage, this.leftFontConnon.reloadTime);
+            this.leftFrontConnonNode.getComponent(ShipConnon).init(this.node.uuid, GrounpType.Player, this.ShipName, "左舷前位炮", this.leftFontConnon.bulletSpeed, this.leftFontConnon.bulletDamage, this.leftFontConnon.reloadTime);
         } else {
-            this.leftFrontConnonTs.node.active = false;
+            this.leftFrontConnonNode.active = false;
         }
+
+        this.HpProgressNode.getComponent(cc.ProgressBar).progress = this.currentHp / this.HP; //初始化血条
+        this.onHPChange(0);
     }
 
     update(dt) {
+        this.HpProgressNode.angle = this.node.angle * -1;  // 纠正血条的角度
+        this.fireEffectNode.angle = this.node.angle * -1;  // 纠正血条的角度 
+        this.UpdateFireLevelWithHp();
         // 航行管理
         if (this.currentRunningBhv == ShipBhvType.MoveInPath) {
             let bhvMoveTs = this.getComponent(BhvMove);
@@ -81,7 +92,7 @@ export default class PlayerCtrl extends cc.Component {
             }
             let steeringForce = bhvMoveTs.Seek(this.node.position, posNextPath, this.MaxSpeed * responseLevel);
             steeringForce = TruncateByVec2Mag(this.MaxForce, steeringForce);
-            this.steeringForceApply(steeringForce, dt);
+            bhvMoveTs.steeringForceApply(steeringForce, dt, this.MaxSpeed);
         }
         // 雷达扫描及其火力管理
         if (this.runtimeRadarScanTime >= this.radarScanInterval) {
@@ -91,7 +102,74 @@ export default class PlayerCtrl extends cc.Component {
             this.runtimeRadarScanTime += dt;
         }
     }
-    // 返回 最近的敌方舰艇
+    async showHpChangeAction(from: number, to: number, ) {
+        // if (this.HpProgressNode.getNumberOfRunningActions() > 0) return;
+        this.HpProgressNode.opacity = 255;
+        this.HpProgressNode.getComponent(cc.ProgressBar).progress = from / this.HP;
+        while (from != to) {
+            if (from > to) {
+                from -= 1;
+            } else {
+                from += 1;
+            }
+            this.HpProgressNode.getComponent(cc.ProgressBar).progress = from / this.HP;
+            await waitForTime(0);
+        }
+        let fadeOut = cc.fadeOut(0.3);
+        this.HpProgressNode.runAction(fadeOut);
+    }
+    UpdateFireLevelWithHp() {
+        let HpPercent = this.currentHp / this.HP;
+        let currentFire = this.fireEffectNode.childrenCount;
+        if (HpPercent < 0.2) {
+            // disaster 保持 5-7 个火焰效果
+            if (currentFire < 7) {
+                this.createRandomFireEffect();
+            }
+        } else if (HpPercent < 0.4) {
+            // mid 保持 3-4 个火焰效果
+            if (currentFire < 4) {
+                this.createRandomFireEffect();
+            }
+        } else if (HpPercent < 0.7) {
+            // small  保持 1-2 个火焰效果
+            if (currentFire < 2) {
+                this.createRandomFireEffect();
+            }
+        }
+    }
+    createRandomFireEffect() {
+        let fireEffect = cc.instantiate(this.fireEffectList[Math.floor(this.fireEffectList.length * Math.random())]);
+        fireEffect.scale = MapNum(Math.random(), 0, 1, 0.6, 1);
+        fireEffect.x = MapNum(Math.random(), 0, 1, -15, 15);
+        fireEffect.y = MapNum(Math.random(), 0, 1, -40, 40);
+        this.fireEffectNode.addChild(fireEffect);
+    }
+    onSink() {
+        // todo 沉没效果
+        cc.find("Canvas/GameInfoNotice").getComponent(GameInfoNotice).CastGameInfo(new InfoRadar(this.ShipName + "光荣沉没"));
+    }
+    onHPChange(deltaHP: number) {
+        console.log("onHPChange");
+
+        let from = this.currentHp;
+        if (deltaHP > 0) {
+            if (this.currentHp + deltaHP > this.HP) {
+                this.currentHp = this.HP;
+            } else {
+                this.currentHp += deltaHP;
+            }
+        } else {
+            if (this.currentHp + deltaHP <= 0) {
+                //  销毁对象
+                this.onSink();
+            } else {
+                this.currentHp += deltaHP;
+            }
+        }
+        this.showHpChangeAction(from, this.currentHp);
+    }
+    // 返回 最近的敌方舰艇 
     findEnemyTarget() {
         let spawnNode = cc.find("Canvas/playerSpawn");
         let enemyList = spawnNode.getComponentsInChildren(EnemyCtrl);
@@ -108,6 +186,7 @@ export default class PlayerCtrl extends cc.Component {
                     isAnyOneInFireRange = true;
                 }
                 if (distance <= this.RadarRange) {
+                    enemyInFireRange = enumyCtrlTs;
                     isAnyOneInRadarRange = true;
                     cc.find("Canvas/EnemyInfoDot").getComponent(EnemyInfoDot).showColorTipDot(enumyCtrlTs.node.position, 100);
                 }
@@ -130,13 +209,17 @@ export default class PlayerCtrl extends cc.Component {
                     this.currentWarnLevel = WarnLevel.EnemyInShotRange;
                     cc.find("Canvas/GameInfoNotice").getComponent(GameInfoNotice).CastGameInfo(new InfoRadar("进入射程,开火"));
                 }
-                this.aim(enemyInFireRange.node.position);
+                // 进入射程开火
                 this.fire(enemyInFireRange.node.position);
             } else {
                 if (this.currentWarnLevel == WarnLevel.EnemyInShotRange) {
                     this.currentWarnLevel = WarnLevel.EnemyInView;
                     cc.find("Canvas/GameInfoNotice").getComponent(GameInfoNotice).CastGameInfo(new InfoRadar("超出了射程"));
                 }
+            }
+            // 时刻瞄准
+            if (enemyInFireRange != null) {
+                this.aim(enemyInFireRange.node.position);
             }
         } else {
             if (this.currentWarnLevel != WarnLevel.none) {
@@ -146,29 +229,7 @@ export default class PlayerCtrl extends cc.Component {
             }
         }
     }
-    steeringForceApply(steeringForce, dt) {
-        // 计算瞬时加速度
-        var acc = steeringForce.div(this.Mass);
-        // 计算瞬时速度
-        this.vVelocity.addSelf(acc.mul(dt));
-        this.vVelocity = TruncateByVec2Mag(this.MaxSpeed, this.vVelocity);
-        // 计算位移，使其移动
-        var posOffset = this.vVelocity.mul(dt);
-        var posNow = this.node.position;
-        var posNext = posNow.add(posOffset);
-        this.node.position = posNext;
-        // 计算朝向（角度）
-        // this.node.angle --- for 2.1.0+
-        // this.node.rotation
-        var angle = this.node.angle * Math.PI / 180;
-        var currentVHeading = cc.Vec2.UP.negSelf().rotate(angle);
-        var headingThisMoment = currentVHeading.lerp(this.vVelocity.normalize(), dt * this.MaxTurnRate);
-        var angle = cc.Vec2.UP.negSelf().signAngle(headingThisMoment);
-        var degree = angle / Math.PI * 180;
-        this.node.angle = degree;
-        var angle = this.node.angle * Math.PI / 180;
-        this.vHeading = cc.Vec2.UP.negSelf().rotate(angle);
-    }
+
     enterCombat() {
         let sailNode = this.node.getChildByName("shipSail");
         // sailNode.opacity = 72;
@@ -183,26 +244,17 @@ export default class PlayerCtrl extends cc.Component {
     }
     fire(firePos: cc.Vec2) {
         if (this.leftFontConnon.isActive == true) {
-            this.leftFrontConnonTs.fire(firePos);
+            this.leftFrontConnonNode.getComponent(ShipConnon).fire(firePos);
         }
     }
     aim(firePos: cc.Vec2) {
         if (this.leftFontConnon.isActive == true) {
-            this.leftFrontConnonTs.aim(firePos);
+            this.leftFrontConnonNode.getComponent(ShipConnon).aim(firePos);
         }
     }
     moveInPath(targetTileIndex: cc.Vec2) {
         this.currentRunningBhv = ShipBhvType.MoveInPath;
         this.node.getComponent(BhvFollowPath).init(targetTileIndex);
-    }
-    isInTile(testTileIndex: cc.Vec2) {
-        let mapCtrlTs = cc.find("Canvas/TiledMap").getComponent(MapCtrl);
-        let startIndex = mapCtrlTs.convertTileMapNodePositionToTileIndex(this.node.position);
-        if (testTileIndex.x == startIndex.x && testTileIndex.y == startIndex.y) {
-            return true;
-        } else {
-            return false;
-        }
     }
 
     /**

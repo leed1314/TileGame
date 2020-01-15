@@ -1,30 +1,128 @@
-import { waitForTime, MapNum } from "../Util/Tools";
+import { waitForTime, MapNum, TruncateByVec2Mag } from "../Util/Tools";
+import PlayerCtrl, { ShipBhvType, WarnLevel } from "./PlayerCtrl";
+import { CannonModel } from "../UserModel/UserModel";
+import ShipConnon from "./ShipConnon";
+import BhvMove from "./BhvMove";
+import BhvFollowPath, { BhvFollowPathStatus, ShipPostureType } from "./BhvFollowPath";
+import MapCtrl from "./MapCtrl";
+import { GrounpType } from "./ConnonBullet";
 
 const { ccclass, property } = cc._decorator;
 
 @ccclass
 export default class EnemyCtrl extends cc.Component {
     // LIFE-CYCLE CALLBACKS:
+    /**
+     * MaxSpeed 和 MaxForce 应在一个合适的比例之下：
+     * 如果 MaxSpeed 过大会出现转向时绕大圈，无法到达终点
+     * 如果 MaxForce 过大会出现转向时加速度变化过快，同样出现无法到达终点
+     */
+    MaxSpeed: number = 100; //单位: 像素/秒
+    MaxForce: number = 200;
+    TruningSpeedRatio: number = 5; // 转向加力系数
+    radarScanInterval: number = 2; // 雷达扫描间隔
+    runtimeRadarScanTime: number = 0;
+    ShipName: string = "飞翔的荷兰人";
+    HP: number = 100;
+    FireRange: number = 300; // 火炮射程
+    RadarRange: number = 900; // 雷达照射范围
+    currentHp: number = 100;
+    currentPathList: Array<cc.Vec2> = null;
+    currentRunningBhv: ShipBhvType = -1;
+    currentWarnLevel: WarnLevel = 0;
+
+    // 左舷 前位炮参数
+    leftFontConnon: CannonModel = new CannonModel(true, 300, 10, 3);
+
+    @property(cc.Node)
+    leftFrontConnonNode: cc.Node = null;
+
     @property([cc.Prefab])
     fireEffectList: Array<cc.Prefab> = [];
     @property(cc.Node)
     HpProgressNode: cc.Node = null;
     @property(cc.Node)
     fireEffectNode: cc.Node = null;
-    HP: number = 100;
-    CurrentHP: number = 100;
-    ShipName: string = "飞翔的荷兰人";
     // onLoad () {}
 
     start() {
-        this.HpProgressNode.getComponent(cc.ProgressBar).progress = this.CurrentHP / this.HP; //初始化血条
+        if (this.leftFontConnon.isActive == true) {
+            this.leftFrontConnonNode.getComponent(ShipConnon).init(this.node.uuid, GrounpType.Enemy, this.ShipName, "左舷前位炮", this.leftFontConnon.bulletSpeed, this.leftFontConnon.bulletDamage, this.leftFontConnon.reloadTime);
+        } else {
+            this.leftFrontConnonNode.active = false;
+        }
+        this.HpProgressNode.getComponent(cc.ProgressBar).progress = this.currentHp / this.HP; //初始化血条
         this.onHPChange(0);
     }
-
+    // 用来重置 舰艇的数据， 如果不重置则使用默认值
+    setEnumyShipData(MaxSpeed: number, MaxForce: number, radarScanInterval: number, ShipName: string, FireRange: number, RadarRange: number, HP: number, currentHp: number,
+        leftFontConnon: CannonModel) {
+        this.MaxSpeed = MaxSpeed;
+        this.MaxForce = MaxForce;
+        this.radarScanInterval = radarScanInterval;
+        this.ShipName = ShipName;
+        this.FireRange = FireRange;
+        this.RadarRange = RadarRange;
+        this.HP = HP;
+        this.currentHp = currentHp;
+        this.leftFontConnon = leftFontConnon;
+    }
     update(dt) {
         this.HpProgressNode.angle = this.node.angle * -1;  // 纠正血条的角度
         this.fireEffectNode.angle = this.node.angle * -1;  // 纠正血条的角度 
         this.UpdateFireLevelWithHp();
+
+        // 航行管理
+        if (this.currentRunningBhv == ShipBhvType.MoveInPath) {
+            let bhvMoveTs = this.getComponent(BhvMove);
+            let bhvFollowPathTs = this.node.getComponent(BhvFollowPath)
+            if (bhvFollowPathTs.currentRunningStatus == BhvFollowPathStatus.Finshed) { // 意味着已经到达前进节点
+                this.currentRunningBhv = ShipBhvType.Idle;
+                return;
+            }
+            // 计算行为合力
+            let posNextPath = bhvFollowPathTs.currentPathPoint == null ? this.node.position : bhvFollowPathTs.currentPathPoint;
+            let responseLevel = 1;
+            if (bhvFollowPathTs.currentPosture = ShipPostureType.Turning) {
+                responseLevel *= this.TruningSpeedRatio;
+            }
+            let steeringForce = bhvMoveTs.Seek(this.node.position, posNextPath, this.MaxSpeed * responseLevel);
+            steeringForce = TruncateByVec2Mag(this.MaxForce, steeringForce);
+            bhvMoveTs.steeringForceApply(steeringForce, dt, this.MaxSpeed);
+        }
+        // 雷达扫描及其火力管理
+        if (this.runtimeRadarScanTime >= this.radarScanInterval) {
+            this.runtimeRadarScanTime = 0;
+            this.findEnemyTarget();
+        } else {
+            this.runtimeRadarScanTime += dt;
+        }
+    }
+    enterCombat() {
+        let sailNode = this.node.getChildByName("shipSail");
+        // sailNode.opacity = 72;
+        let fadeOut = cc.fadeTo(1.1, 72);
+        sailNode.runAction(fadeOut);
+    }
+    exitCombat() {
+        let sailNode = this.node.getChildByName("shipSail");
+        // sailNode.opacity = 255;
+        let fadeIn = cc.fadeTo(1.1, 255);
+        sailNode.runAction(fadeIn);
+    }
+    fire(firePos: cc.Vec2) {
+        if (this.leftFontConnon.isActive == true) {
+            this.leftFrontConnonNode.getComponent(ShipConnon).fire(firePos);
+        }
+    }
+    aim(firePos: cc.Vec2) {
+        if (this.leftFontConnon.isActive == true) {
+            this.leftFrontConnonNode.getComponent(ShipConnon).aim(firePos);
+        }
+    }
+    moveInPath(targetTileIndex: cc.Vec2) {
+        this.currentRunningBhv = ShipBhvType.MoveInPath;
+        this.node.getComponent(BhvFollowPath).init(targetTileIndex);
     }
     async showHpChangeAction(from: number, to: number, ) {
         // if (this.HpProgressNode.getNumberOfRunningActions() > 0) return;
@@ -43,7 +141,7 @@ export default class EnemyCtrl extends cc.Component {
         this.HpProgressNode.runAction(fadeOut);
     }
     UpdateFireLevelWithHp() {
-        let HpPercent = this.CurrentHP / this.HP;
+        let HpPercent = this.currentHp / this.HP;
         let currentFire = this.fireEffectNode.childrenCount;
         if (HpPercent < 0.2) {
             // disaster 保持 5-7 个火焰效果
@@ -72,20 +170,73 @@ export default class EnemyCtrl extends cc.Component {
     onHPChange(deltaHP: number) {
         console.log("onHPChange");
 
-        let from = this.CurrentHP;
+        let from = this.currentHp;
         if (deltaHP > 0) {
-            if (this.CurrentHP + deltaHP > this.HP) {
-                this.CurrentHP = this.HP;
+            if (this.currentHp + deltaHP > this.HP) {
+                this.currentHp = this.HP;
             } else {
-                this.CurrentHP += deltaHP;
+                this.currentHp += deltaHP;
             }
         } else {
-            if (this.CurrentHP + deltaHP <= 0) {
+            if (this.currentHp + deltaHP <= 0) {
                 // todo 销毁对象
             } else {
-                this.CurrentHP += deltaHP;
+                this.currentHp += deltaHP;
             }
         }
-        this.showHpChangeAction(from, this.CurrentHP);
+        this.showHpChangeAction(from, this.currentHp);
+    }
+    // 返回 最近的敌方舰艇
+    findEnemyTarget() {
+        let spawnNode = cc.find("Canvas/playerSpawn");
+        let playerList = spawnNode.getComponentsInChildren(PlayerCtrl);
+        if (playerList.length > 0) {
+            let isAnyOneInFireRange = false;
+            let isAnyOneInRadarRange = false;
+            let enemyInFireRange = null;
+            for (var i = 0; i < playerList.length; i++) {
+                let enumyCtrlTs = playerList[i];
+                let distance = enumyCtrlTs.node.position.sub(this.node.position).mag();
+                if (distance <= this.FireRange) {
+                    enemyInFireRange = enumyCtrlTs;
+                    isAnyOneInFireRange = true;
+                }
+                if (distance <= this.RadarRange) {
+                    enemyInFireRange = enumyCtrlTs;
+                    isAnyOneInRadarRange = true;
+                }
+            }
+            if (isAnyOneInRadarRange) {
+                if (this.currentWarnLevel == WarnLevel.none) {
+                    this.currentWarnLevel = WarnLevel.EnemyInView;
+                    this.enterCombat();
+                }
+            } else {
+                if (this.currentWarnLevel != WarnLevel.none) {
+                    this.currentWarnLevel = WarnLevel.none;
+                    this.exitCombat();
+                }
+            }
+            if (isAnyOneInFireRange) {
+                if (this.currentWarnLevel != WarnLevel.EnemyInShotRange) {
+                    this.currentWarnLevel = WarnLevel.EnemyInShotRange;
+                }
+                // 进入射程开火
+                this.fire(enemyInFireRange.node.position);
+            } else {
+                if (this.currentWarnLevel == WarnLevel.EnemyInShotRange) {
+                    this.currentWarnLevel = WarnLevel.EnemyInView;
+                }
+            }
+            // 时刻瞄准
+            if (enemyInFireRange != null) {
+                this.aim(enemyInFireRange.node.position);
+            }
+        } else {
+            if (this.currentWarnLevel != WarnLevel.none) {
+                this.currentWarnLevel = WarnLevel.none;
+                this.exitCombat();
+            }
+        }
     }
 }

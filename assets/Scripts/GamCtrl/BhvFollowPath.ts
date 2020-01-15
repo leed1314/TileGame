@@ -32,8 +32,8 @@ export default class BhvFollowPath extends cc.Component {
         if (this.currentRunningStatus != BhvFollowPathStatus.Working) return;
 
         let mapCtrlTs = cc.find("Canvas/TiledMap").getComponent(MapCtrl);
-        let playerCtrlTs = this.node.getComponent(PlayerCtrl);
-        if (playerCtrlTs.isInTile(this.getFinshedTile()) == true) { // 意味着已经到达前进节点
+        let BhvMoveTs = this.node.getComponent(BhvMove);
+        if (this.isInTile(this.getFinshedTile()) == true) { // 意味着已经到达前进节点
             // 到达节点之后而且再无新的节点需要导航，认为导航结束
             this.currentRunningStatus = BhvFollowPathStatus.Finshed;
             this.DrawMovePath([]);
@@ -42,7 +42,7 @@ export default class BhvFollowPath extends cc.Component {
         // 意味着没有到达前进节点，则对本段路径进行导航计算
         // 1,预测未来的位置
         let pathR = 32; // 为什么是32，因为地图的tile是64X64
-        let preDictLoc = playerCtrlTs.vVelocity.normalize().mul(pathR).add(this.node.position);
+        let preDictLoc = BhvMoveTs.vVelocity.normalize().mul(pathR).add(this.node.position);
         // 2,计算未来的位置到路径点的法线长度
         let normal = this.node.position;
         let worldRecord = 1000000;  // Start with a very high record distance that can easily be beaten
@@ -91,6 +91,15 @@ export default class BhvFollowPath extends cc.Component {
         this.currentPathList = pathList;
         this.currentRunningStatus = BhvFollowPathStatus.Working;
         this.DrawMovePath(this.currentPathList);
+    }
+    isInTile(testTileIndex: cc.Vec2) {
+        let mapCtrlTs = cc.find("Canvas/TiledMap").getComponent(MapCtrl);
+        let startIndex = mapCtrlTs.convertTileMapNodePositionToTileIndex(this.node.position);
+        if (testTileIndex.x == startIndex.x && testTileIndex.y == startIndex.y) {
+            return true;
+        } else {
+            return false;
+        }
     }
     getFinshedTile() {
         return this.currentPathList[this.currentPathList.length - 1];

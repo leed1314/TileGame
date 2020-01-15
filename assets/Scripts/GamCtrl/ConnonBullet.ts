@@ -97,6 +97,11 @@ export default class ConnonBullet extends cc.Component {
             otherNode.getComponent(EnemyCtrl).onHPChange(this.damage * -1);
             cc.find("Canvas/GameInfoNotice").getComponent(GameInfoNotice).CastGameInfo(new infoDamage(this.belongToShipName, otherNode.getComponent(EnemyCtrl).ShipName, this.damage));
         }
+        if (otherNode.getComponent(PlayerCtrl)) {
+            console.log("命中 PlayerCtrl ，进行伤害结算");
+            otherNode.getComponent(PlayerCtrl).onHPChange(this.damage * -1);
+            cc.find("Canvas/GameInfoNotice").getComponent(GameInfoNotice).CastGameInfo(new infoDamage(this.belongToShipName, otherNode.getComponent(PlayerCtrl).ShipName, this.damage));
+        }
         this.fireWorkAndSelfDestory();
     }
 }
