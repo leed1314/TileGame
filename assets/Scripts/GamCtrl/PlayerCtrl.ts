@@ -210,6 +210,7 @@ export default class PlayerCtrl extends cc.Component {
                     cc.find("Canvas/GameInfoNotice").getComponent(GameInfoNotice).CastGameInfo(new InfoRadar("进入射程,开火"));
                 }
                 // 进入射程开火
+                this.aim(enemyInFireRange.node.position);
                 this.fire(enemyInFireRange.node.position);
             } else {
                 if (this.currentWarnLevel == WarnLevel.EnemyInShotRange) {

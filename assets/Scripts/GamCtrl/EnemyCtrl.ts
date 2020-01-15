@@ -222,6 +222,7 @@ export default class EnemyCtrl extends cc.Component {
                     this.currentWarnLevel = WarnLevel.EnemyInShotRange;
                 }
                 // 进入射程开火
+                this.aim(enemyInFireRange.node.position);
                 this.fire(enemyInFireRange.node.position);
             } else {
                 if (this.currentWarnLevel == WarnLevel.EnemyInShotRange) {

@@ -4187,7 +4187,7 @@
     "_groupIndex": 0,
     "groupIndex": 0,
     "showInEditor": false,
-    "_id": "9cUc7PLw9GboE3RbqWbh5u"
+    "_id": "82q+i+YEdDvJv4SSmOA42I"
   },
   {
     "__type__": "cc.Label",
@@ -4217,7 +4217,7 @@
     "_N$fontFamily": "Arial",
     "_N$overflow": 0,
     "_N$cacheMode": 0,
-    "_id": "62mrIq6rtFUatqdDrIO3ju"
+    "_id": "4fuuH9rb5NL4D3a3LOon2+"
   },
   {
     "__type__": "cc.PrivateNode",
@@ -4280,7 +4280,7 @@
     "_groupIndex": 0,
     "groupIndex": 0,
     "showInEditor": false,
-    "_id": "519rl8LqlNhYRIJGpk4IWw"
+    "_id": "a9ADKGzL1MtqrvhWDt4ZvE"
   },
   {
     "__type__": "cc.Label",
@@ -4310,7 +4310,7 @@
     "_N$fontFamily": "Arial",
     "_N$overflow": 0,
     "_N$cacheMode": 0,
-    "_id": "07F6WyMsFL2ruOH2ronmbA"
+    "_id": "2aBOL4LmdJO6UPCwRL36oA"
   },
   {
     "__type__": "cc.RichText",
@@ -4511,7 +4511,7 @@
     "_groupIndex": 0,
     "groupIndex": 0,
     "showInEditor": false,
-    "_id": "a9RjfAKvNFwbkvbzkcBSmZ"
+    "_id": "61jjGGBr9EfrkoY9cgMwf7"
   },
   {
     "__type__": "cc.Label",
@@ -4541,7 +4541,7 @@
     "_N$fontFamily": "Arial",
     "_N$overflow": 0,
     "_N$cacheMode": 0,
-    "_id": "51qLDuWDhLU5se658KmWow"
+    "_id": "a7/BGQh+9PiYm+gzUzXtpZ"
   },
   {
     "__type__": "cc.PrivateNode",
@@ -4604,7 +4604,7 @@
     "_groupIndex": 0,
     "groupIndex": 0,
     "showInEditor": false,
-    "_id": "afk79YmY5JEYlACTcM/NBk"
+    "_id": "edEJgVOltOvJSnvcoKi9mM"
   },
   {
     "__type__": "cc.Label",
@@ -4634,7 +4634,7 @@
     "_N$fontFamily": "Arial",
     "_N$overflow": 0,
     "_N$cacheMode": 0,
-    "_id": "9dKG3XzyxNfKjqm4tgAGYk"
+    "_id": "a41FVJ65FBKJgP11PEtEdg"
   },
   {
     "__type__": "cc.RichText",
@@ -4839,7 +4839,7 @@
     "_groupIndex": 0,
     "groupIndex": 0,
     "showInEditor": false,
-    "_id": "7bw1aABjZIM4Q65TmooWuo"
+    "_id": "8d8A4/wfdPSI36/sOe8txZ"
   },
   {
     "__type__": "cc.Label",
@@ -4869,7 +4869,7 @@
     "_N$fontFamily": "Arial",
     "_N$overflow": 0,
     "_N$cacheMode": 0,
-    "_id": "1ckiU7vSBAo5t6UJwb1Oeb"
+    "_id": "0bRAfV2otJuIrddZVvY/GK"
   },
   {
     "__type__": "cc.PrefabInfo",
@@ -4879,7 +4879,7 @@
     "asset": {
       "__uuid__": "06068ca9-d322-4687-b44b-1139062c2a64"
     },
-    "fileId": "7bw1aABjZIM4Q65TmooWuo",
+    "fileId": "8d8A4/wfdPSI36/sOe8txZ",
     "sync": false
   },
   {
