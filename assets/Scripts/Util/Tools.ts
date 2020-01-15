@@ -12,7 +12,8 @@ export class UnitIdCreator {
     }
 }
 export let localStorageMap = {
-    gameStroageData: "gameStroageData",
+    gameData: "gameData",
+    PlayerShipData: "PlayerShipData",
 };
 export function localStorageGet(key, type) {
     if (type == 'int') {

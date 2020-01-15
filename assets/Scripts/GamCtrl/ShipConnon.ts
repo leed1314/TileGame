@@ -11,8 +11,8 @@ export default class ShipConnon extends cc.Component {
     @property(cc.Prefab)
     connonFireworkPrefab: cc.Prefab = null;
     // LIFE-CYCLE CALLBACKS:
-    speed: number = 300;
-    damage: number = 20;
+    bulletSpeed: number = 300;
+    bulletDamage: number = 20;
     reloadTime: number = 3.0;
     runtimeReloadTime: number = 0;
     isReload: boolean = false;
@@ -36,11 +36,14 @@ export default class ShipConnon extends cc.Component {
             }
         }
     }
-    init(belongToUUid: string, belongTo: GrounpType, belongToShipName: string, ConnonName: string) {
+    init(belongToUUid: string, belongTo: GrounpType, belongToShipName: string, ConnonName: string, bulletSpeed: number, bulletDamage: number, reloadTime: number) {
         this.belongToUUid = belongToUUid;
         this.belongTo = belongTo;
         this.belongToShipName = belongToShipName;
         this.ConnonName = ConnonName;
+        this.bulletSpeed = bulletSpeed;
+        this.bulletDamage = bulletDamage;
+        this.reloadTime = reloadTime;
     }
     aim(targetPos: cc.Vec2) {
         let mapNode = cc.find("Canvas/TiledMap");
@@ -69,7 +72,7 @@ export default class ShipConnon extends cc.Component {
             this.node.getComponent(cc.Animation).play("ConnonFireShake");
 
             let cannonBall = cc.instantiate(this.connonBullet);
-            cannonBall.getComponent(ConnonBullet).init(shotDirection, shotDirection.mag(), this.speed, this.damage, this.belongToUUid, this.belongTo, this.belongToShipName);
+            cannonBall.getComponent(ConnonBullet).init(shotDirection, shotDirection.mag(), this.bulletSpeed, this.bulletDamage, this.belongToUUid, this.belongTo, this.belongToShipName);
             cannonBall.position = selfBulletSpawnPosInMap;
             bulletSpawnNode.addChild(cannonBall);
 

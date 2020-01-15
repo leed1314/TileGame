@@ -1,6 +1,6 @@
 import MapCtrl from "./MapCtrl";
 import BhvMove from "./BhvMove";
-import { TruncateByVec2Mag } from "../Util/Tools";
+import { TruncateByVec2Mag, localStorageGet, localStorageMap, localStorageSet } from "../Util/Tools";
 import VMEvent from "../Mvvm/VMEvent";
 import ShipConnon from "./ShipConnon";
 import { GrounpType } from "./ConnonBullet";
@@ -8,6 +8,7 @@ import BhvFollowPath, { BhvFollowPathStatus, ShipPostureType } from "./BhvFollow
 import EnemyCtrl from "./EnemyCtrl";
 import GameInfoNotice, { InfoRadar } from "./GameInfoNotice";
 import EnemyInfoDot from "./EnemyInfoDot";
+import { CannonModel, ShipModel, PlayerShipModel } from "../UserModel/UserModel";
 
 const { ccclass, property } = cc._decorator;
 export enum ShipBhvType {
@@ -32,26 +33,35 @@ export default class PlayerCtrl extends cc.Component {
      */
     MaxSpeed: number = 100; //单位: 像素/秒
     MaxForce: number = 200;
-    DesiredSpeed: number = 20;
     MaxTurnRate: number = 10;
     Mass: number = 1;
-
-    radarScanInterval: number = 2;
+    TruningSpeedRatio: number = 5; // 转向加力系数
+    radarScanInterval: number = 2; // 雷达扫描间隔
     runtimeRadarScanTime: number = 0;
     ShipName: string = "黑珍珠";
     HP: number = 100;
-    FireRange: number = 300;
+    FireRange: number = 300; // 火炮射程
+    RadarRange: number = 900; // 雷达照射范围
     currentHp: number = 100;
     currentPathList: Array<cc.Vec2> = null;
     currentRunningBhv: ShipBhvType = -1;
     currentWarnLevel: WarnLevel = 0;
 
+    // 左舷 前位炮参数
+    leftFontConnon: CannonModel = new CannonModel(true, 300, 50, 3);
+
     @property(ShipConnon)
-    leftFrontConnon: ShipConnon = null;
+    leftFrontConnonTs: ShipConnon = null;
     // onLoad () {}
 
     start() {
-        this.leftFrontConnon.init(this.node.uuid, GrounpType.Player, this.ShipName, "左舷前位炮");
+        this.loadShipModelFromLocal();
+
+        if (this.leftFontConnon.isActive == true) {
+            this.leftFrontConnonTs.init(this.node.uuid, GrounpType.Player, this.ShipName, "左舷前位炮", this.leftFontConnon.bulletSpeed, this.leftFontConnon.bulletDamage, this.leftFontConnon.reloadTime);
+        } else {
+            this.leftFrontConnonTs.node.active = false;
+        }
     }
 
     update(dt) {
@@ -67,9 +77,9 @@ export default class PlayerCtrl extends cc.Component {
             let posNextPath = bhvFollowPathTs.currentPathPoint == null ? this.node.position : bhvFollowPathTs.currentPathPoint;
             let responseLevel = 1;
             if (bhvFollowPathTs.currentPosture = ShipPostureType.Turning) {
-                responseLevel *= 5;
+                responseLevel *= this.TruningSpeedRatio;
             }
-            let steeringForce = bhvMoveTs.Seek(this.node.position, posNextPath, this.DesiredSpeed * responseLevel);
+            let steeringForce = bhvMoveTs.Seek(this.node.position, posNextPath, this.MaxSpeed * responseLevel);
             steeringForce = TruncateByVec2Mag(this.MaxForce, steeringForce);
             this.steeringForceApply(steeringForce, dt);
         }
@@ -97,7 +107,7 @@ export default class PlayerCtrl extends cc.Component {
                     enemyInFireRange = enumyCtrlTs;
                     isAnyOneInFireRange = true;
                 }
-                if (distance <= this.FireRange * 2) {
+                if (distance <= this.RadarRange) {
                     isAnyOneInRadarRange = true;
                     cc.find("Canvas/EnemyInfoDot").getComponent(EnemyInfoDot).showColorTipDot(enumyCtrlTs.node.position, 100);
                 }
@@ -172,10 +182,14 @@ export default class PlayerCtrl extends cc.Component {
         sailNode.runAction(fadeIn);
     }
     fire(firePos: cc.Vec2) {
-        this.leftFrontConnon.fire(firePos);
+        if (this.leftFontConnon.isActive == true) {
+            this.leftFrontConnonTs.fire(firePos);
+        }
     }
     aim(firePos: cc.Vec2) {
-        this.leftFrontConnon.aim(firePos);
+        if (this.leftFontConnon.isActive == true) {
+            this.leftFrontConnonTs.aim(firePos);
+        }
     }
     moveInPath(targetTileIndex: cc.Vec2) {
         this.currentRunningBhv = ShipBhvType.MoveInPath;
@@ -189,5 +203,62 @@ export default class PlayerCtrl extends cc.Component {
         } else {
             return false;
         }
+    }
+
+    /**
+     * 从本地数据载入上次的玩家数据
+     */
+    loadShipModelFromLocal() {
+        let result = localStorageGet(localStorageMap.PlayerShipData, "array") as Array<ShipModel>;
+        if (result.length == 0) {
+            // 使用默认的 runtime 数据
+            this.syncShipModeFromRuntime();
+        } else {
+            let localShipData = result[0];
+            this.MaxSpeed = localShipData.MaxSpeed;
+            this.MaxForce = localShipData.MaxForce;
+            this.radarScanInterval = localShipData.radarScanInterval;
+            this.ShipName = localShipData.ShipName;
+            this.FireRange = localShipData.FireRange;
+            this.RadarRange = localShipData.RadarRange;
+            this.HP = localShipData.HP;
+            this.currentHp = localShipData.currentHp;
+            this.leftFontConnon = localShipData.leftFontConnon;
+        }
+    }
+    /**
+     * 将当前的玩家数据保存到本地
+     */
+    restoreShipModelToLocal() {
+        this.syncShipModeToRuntime();
+        localStorageSet(localStorageMap.PlayerShipData, "array", [PlayerShipModel]);
+    }
+    /**
+     * 将运行时中保存的玩家数据同步到此对象实例
+     */
+    syncShipModeFromRuntime() {
+        this.MaxSpeed = PlayerShipModel.MaxSpeed;
+        this.MaxForce = PlayerShipModel.MaxForce;
+        this.radarScanInterval = PlayerShipModel.radarScanInterval;
+        this.ShipName = PlayerShipModel.ShipName;
+        this.FireRange = PlayerShipModel.FireRange;
+        this.RadarRange = PlayerShipModel.RadarRange;
+        this.HP = PlayerShipModel.HP;
+        this.currentHp = PlayerShipModel.currentHp;
+        this.leftFontConnon = PlayerShipModel.leftFontConnon;
+    }
+    /**
+     * 将次实例中的玩家数据同步到运行时
+     */
+    syncShipModeToRuntime() {
+        PlayerShipModel.MaxSpeed = this.MaxSpeed;
+        PlayerShipModel.MaxForce = this.MaxForce;
+        PlayerShipModel.radarScanInterval = this.radarScanInterval;
+        PlayerShipModel.ShipName = this.ShipName;
+        PlayerShipModel.FireRange = this.FireRange;
+        PlayerShipModel.RadarRange = this.RadarRange;
+        PlayerShipModel.HP = this.HP;
+        PlayerShipModel.currentHp = this.currentHp;
+        PlayerShipModel.leftFontConnon = this.leftFontConnon;
     }
 }
