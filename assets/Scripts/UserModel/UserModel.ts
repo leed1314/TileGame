@@ -43,10 +43,23 @@ export class ShipModel {
 export class GameData {
     MapSize: cc.Size = null;
     TileSize: cc.Size = null;
+    //菜单状态（代表选择了哪个菜单
+    menu = {
+        state: 0
+    }
+    skill_point: number = 15;//剩余的技能点
+    used_point: number = 0;//已经使用的技能点
+    UISkill = {
+        id:0,
+        pic:0,
+        name:'??',
+        level:0,
+        info:'未知'
+    }
 }
 //原始数据
 export let GameDataRuntime: GameData = new GameData();
-export let PlayerShipModel: ShipModel = new ShipModel(80, 140, 2, "小破船", 300, 500, 100, 100, new CannonModel(true, 300, 20, 3));
+export let PlayerShipModel: ShipModel = new ShipModel(80, 140, 2, "小破船", 300, 400, 100, 100, new CannonModel(true, 300, 20, 3));
 //数据模型绑定,定义后不能修改顺序
 VM.add(GameDataRuntime, 'GameDataRuntime');    //定义全局tag
 VM.add(PlayerShipModel, 'PlayerShipModel');

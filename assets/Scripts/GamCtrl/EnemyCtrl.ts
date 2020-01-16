@@ -26,7 +26,7 @@ export default class EnemyCtrl extends cc.Component {
     ShipName: string = "飞翔的荷兰人";
     HP: number = 100;
     FireRange: number = 300; // 火炮射程
-    RadarRange: number = 900; // 雷达照射范围
+    RadarRange: number = 400; // 雷达照射范围
     currentHp: number = 100;
     currentPathList: Array<cc.Vec2> = null;
     currentRunningBhv: ShipBhvType = -1;
@@ -38,7 +38,7 @@ export default class EnemyCtrl extends cc.Component {
     @property(cc.Node)
     leftFrontConnonNode: cc.Node = null;
 
-    @property([cc.Prefab])
+    @property(cc.Prefab)
     shipSinkEffect: cc.Prefab = null;
     @property([cc.Prefab])
     fireEffectList: Array<cc.Prefab> = [];

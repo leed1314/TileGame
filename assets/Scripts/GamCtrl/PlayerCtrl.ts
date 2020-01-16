@@ -50,7 +50,7 @@ export default class PlayerCtrl extends cc.Component {
 
     @property(cc.Node)
     leftFrontConnonNode: cc.Node = null;
-    @property([cc.Prefab])
+    @property(cc.Prefab)
     shipSinkEffect: cc.Prefab = null;
     @property([cc.Prefab])
     fireEffectList: Array<cc.Prefab> = [];
