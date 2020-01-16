@@ -162,7 +162,7 @@
     ],
     "_srcBlendFactor": 770,
     "_dstBlendFactor": 771,
-    "_fadeTime": 0.45,
+    "_fadeTime": 0.25,
     "_minSeg": 1,
     "_stroke": 8,
     "_texture": {

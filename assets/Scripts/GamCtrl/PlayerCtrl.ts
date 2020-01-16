@@ -50,7 +50,8 @@ export default class PlayerCtrl extends cc.Component {
 
     @property(cc.Node)
     leftFrontConnonNode: cc.Node = null;
-
+    @property([cc.Prefab])
+    shipSinkEffect: cc.Prefab = null;
     @property([cc.Prefab])
     fireEffectList: Array<cc.Prefab> = [];
     @property(cc.Node)
@@ -122,17 +123,17 @@ export default class PlayerCtrl extends cc.Component {
         let HpPercent = this.currentHp / this.HP;
         let currentFire = this.fireEffectNode.childrenCount;
         if (HpPercent < 0.2) {
-            // disaster 保持 5-7 个火焰效果
-            if (currentFire < 7) {
+            // disaster 保持 5 个火焰效果
+            if (currentFire < 6) {
                 this.createRandomFireEffect();
             }
         } else if (HpPercent < 0.4) {
-            // mid 保持 3-4 个火焰效果
+            // mid 保持 3 个火焰效果
             if (currentFire < 4) {
                 this.createRandomFireEffect();
             }
         } else if (HpPercent < 0.7) {
-            // small  保持 1-2 个火焰效果
+            // small  保持 1 个火焰效果
             if (currentFire < 2) {
                 this.createRandomFireEffect();
             }
@@ -146,8 +147,12 @@ export default class PlayerCtrl extends cc.Component {
         this.fireEffectNode.addChild(fireEffect);
     }
     onSink() {
-        // todo 沉没效果
+        // 沉没效果
         cc.find("Canvas/GameInfoNotice").getComponent(GameInfoNotice).CastGameInfo(new InfoRadar(this.ShipName + "光荣沉没"));
+        let sinkEffect = cc.instantiate(this.shipSinkEffect);
+        sinkEffect.position = this.node.position;
+        this.node.parent.addChild(sinkEffect);
+        this.node.destroy();
     }
     onHPChange(deltaHP: number) {
         console.log("onHPChange");

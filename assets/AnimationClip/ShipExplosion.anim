@@ -1,0 +1,85 @@
+{
+  "__type__": "cc.AnimationClip",
+  "_name": "ShipExplosion",
+  "_objFlags": 0,
+  "_native": "",
+  "_duration": 0.43333333333333335,
+  "sample": 60,
+  "speed": 1,
+  "wrapMode": 1,
+  "curveData": {
+    "comps": {
+      "cc.Sprite": {
+        "spriteFrame": [
+          {
+            "frame": 0,
+            "value": {
+              "__uuid__": "556ab389-cef7-48e3-82a3-78b7404eb16d"
+            }
+          },
+          {
+            "frame": 0.05,
+            "value": {
+              "__uuid__": "b79527c3-3867-429f-bf33-2bb171a151e9"
+            }
+          },
+          {
+            "frame": 0.1,
+            "value": {
+              "__uuid__": "a0f8a971-274d-4708-a436-4f443c7d8ee1"
+            }
+          },
+          {
+            "frame": 0.15,
+            "value": {
+              "__uuid__": "316e2566-574d-470f-a9a0-1b0a577188e6"
+            }
+          },
+          {
+            "frame": 0.18333333333333332,
+            "value": {
+              "__uuid__": "0e27eb95-89fd-4158-aa54-a29123538fb0"
+            }
+          },
+          {
+            "frame": 0.23333333333333334,
+            "value": {
+              "__uuid__": "4212a0ed-0956-4ef1-ac23-b9ccb1b4b23d"
+            }
+          },
+          {
+            "frame": 0.2833333333333333,
+            "value": {
+              "__uuid__": "bd9b517c-37ea-4af6-a205-68a41906ba82"
+            }
+          },
+          {
+            "frame": 0.3333333333333333,
+            "value": {
+              "__uuid__": "bbb12f5d-2330-44fe-b5da-f8a91414cc2a"
+            }
+          },
+          {
+            "frame": 0.38333333333333336,
+            "value": {
+              "__uuid__": "9054e847-5583-4124-a929-08aeec4bc01e"
+            }
+          },
+          {
+            "frame": 0.4166666666666667,
+            "value": {
+              "__uuid__": "f9939a1a-18ba-4382-8e8b-f51bff79985a"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "events": [
+    {
+      "frame": 0.4166666666666667,
+      "func": "OnFinshed",
+      "params": []
+    }
+  ]
+}

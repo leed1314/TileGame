@@ -31,20 +31,17 @@
       },
       {
         "__id__": 7
-      },
-      {
-        "__id__": 8
       }
     ],
     "_prefab": {
-      "__id__": 9
+      "__id__": 8
     },
     "_opacity": 255,
     "_color": {
       "__type__": "cc.Color",
-      "r": 103,
-      "g": 98,
-      "b": 221,
+      "r": 132,
+      "g": 72,
+      "b": 160,
       "a": 255
     },
     "_contentSize": {
@@ -106,9 +103,9 @@
     "_opacity": 255,
     "_color": {
       "__type__": "cc.Color",
-      "r": 103,
-      "g": 98,
-      "b": 221,
+      "r": 132,
+      "g": 72,
+      "b": 160,
       "a": 255
     },
     "_contentSize": {
@@ -190,7 +187,7 @@
     "asset": {
       "__uuid__": "06068ca9-d322-4687-b44b-1139062c2a64"
     },
-    "fileId": "fdNdz9YGlGY7YJFfY8cD5T",
+    "fileId": "f1akeeksVHUZOpo3HEurmK",
     "sync": false
   },
   {
@@ -203,7 +200,7 @@
     "_enabled": true,
     "_fontFamily": "Arial",
     "_isSystemFontUsed": true,
-    "_N$string": "<color=#6762DD>发现1艘敌舰</c>",
+    "_N$string": "<color=#8448A0>发现1艘敌舰</c>",
     "_N$horizontalAlign": 0,
     "_N$fontSize": 20,
     "_N$font": null,
@@ -251,19 +248,6 @@
     "bhvType": 0,
     "delayTime": 3,
     "fadeoutTime": 1,
-    "_id": ""
-  },
-  {
-    "__type__": "5bd51jBv5ZPkrBB0s3oetrL",
-    "_name": "",
-    "_objFlags": 0,
-    "node": {
-      "__id__": 1
-    },
-    "_enabled": true,
-    "bhvType": 1,
-    "delayTime": 0,
-    "fadeoutTime": 0,
     "_id": ""
   },
   {
