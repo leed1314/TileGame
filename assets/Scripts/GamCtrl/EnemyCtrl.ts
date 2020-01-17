@@ -13,6 +13,8 @@ const { ccclass, property } = cc._decorator;
 @ccclass
 export default class EnemyCtrl extends cc.Component {
     // LIFE-CYCLE CALLBACKS:
+    shipFireCheckInterval: number = 2;
+    shipFireCheckIntervalRuntime: number = 0;
     /**
      * MaxSpeed 和 MaxForce 应在一个合适的比例之下：
      * 如果 MaxSpeed 过大会出现转向时绕大圈，无法到达终点
@@ -28,6 +30,9 @@ export default class EnemyCtrl extends cc.Component {
     FireRange: number = 300; // 火炮射程
     RadarRange: number = 400; // 雷达照射范围
     currentHp: number = 100;
+    selfHealing: number = 1;
+    selfHealingHPShowInterval: number = 3;
+    selfHealingHPShowIntervalCounter: number = 0;
     currentPathList: Array<cc.Vec2> = null;
     currentRunningBhv: ShipBhvType = -1;
     currentWarnLevel: WarnLevel = 0;
@@ -58,7 +63,7 @@ export default class EnemyCtrl extends cc.Component {
         this.onHPChange(0);
     }
     // 用来重置 舰艇的数据， 如果不重置则使用默认值
-    setEnumyShipData(MaxSpeed: number, MaxForce: number, radarScanInterval: number, ShipName: string, FireRange: number, RadarRange: number, HP: number, currentHp: number,
+    setEnumyShipData(MaxSpeed: number, MaxForce: number, radarScanInterval: number, ShipName: string, FireRange: number, RadarRange: number, HP: number, currentHp: number, selfHealing: number,
         leftFontConnon: CannonModel) {
         this.MaxSpeed = MaxSpeed;
         this.MaxForce = MaxForce;
@@ -68,12 +73,19 @@ export default class EnemyCtrl extends cc.Component {
         this.RadarRange = RadarRange;
         this.HP = HP;
         this.currentHp = currentHp;
+        this.selfHealing = selfHealing;
         this.leftFontConnon = leftFontConnon;
     }
     update(dt) {
         this.HpProgressNode.angle = this.node.angle * -1;  // 纠正血条的角度
         this.fireEffectNode.angle = this.node.angle * -1;  // 纠正血条的角度 
-        this.UpdateFireLevelWithHp();
+        // 船上燃烧火焰效果管理
+        if (this.shipFireCheckIntervalRuntime > this.shipFireCheckInterval) {
+            this.shipFireCheckIntervalRuntime = 0;
+            this.UpdateFireLevelWithHp();
+        } else {
+            this.shipFireCheckIntervalRuntime += dt;
+        }
 
         // 航行管理
         if (this.currentRunningBhv == ShipBhvType.MoveInPath) {
@@ -99,6 +111,13 @@ export default class EnemyCtrl extends cc.Component {
             this.findEnemyTarget();
         } else {
             this.runtimeRadarScanTime += dt;
+        }
+        //血量恢复管理
+        if (this.selfHealingHPShowIntervalCounter > this.selfHealingHPShowInterval) {
+            this.selfHealingHPShowIntervalCounter = 0;
+            this.onHPChange(this.selfHealingHPShowInterval * this.selfHealing, this.findEnemyTarget());
+        } else {
+            this.selfHealingHPShowIntervalCounter += dt;
         }
     }
     enterCombat() {
@@ -128,7 +147,7 @@ export default class EnemyCtrl extends cc.Component {
         this.node.getComponent(BhvFollowPath).init(targetTileIndex);
     }
     async showHpChangeAction(from: number, to: number, ) {
-        // if (this.HpProgressNode.getNumberOfRunningActions() > 0) return;
+        if (this.HpProgressNode.getNumberOfRunningActions() > 0) return;
         this.HpProgressNode.opacity = 255;
         this.HpProgressNode.getComponent(cc.ProgressBar).progress = from / this.HP;
         while (from != to) {
@@ -140,25 +159,26 @@ export default class EnemyCtrl extends cc.Component {
             this.HpProgressNode.getComponent(cc.ProgressBar).progress = from / this.HP;
             await waitForTime(0);
         }
+        let delay = cc.delayTime(0.5);
         let fadeOut = cc.fadeOut(0.3);
-        this.HpProgressNode.runAction(fadeOut);
+        this.HpProgressNode.runAction(cc.sequence(delay, fadeOut));
     }
     UpdateFireLevelWithHp() {
         let HpPercent = this.currentHp / this.HP;
         let currentFire = this.fireEffectNode.childrenCount;
         if (HpPercent < 0.2) {
-            // disaster 保持 4 个火焰效果
-            if (currentFire < 6) {
+            // disaster 保持 6 个火焰效果
+            if (currentFire < 7) {
                 this.createRandomFireEffect();
             }
         } else if (HpPercent < 0.4) {
-            // mid 保持 3 个火焰效果
-            if (currentFire < 4) {
+            // mid 保持 4 个火焰效果
+            if (currentFire < 5) {
                 this.createRandomFireEffect();
             }
         } else if (HpPercent < 0.7) {
             // small  保持 2 个火焰效果
-            if (currentFire < 2) {
+            if (currentFire < 3) {
                 this.createRandomFireEffect();
             }
         }
@@ -178,9 +198,8 @@ export default class EnemyCtrl extends cc.Component {
         this.node.parent.addChild(sinkEffect);
         this.node.destroy();
     }
-    onHPChange(deltaHP: number) {
+    onHPChange(deltaHP: number, noShowAction?: boolean) {
         console.log("onHPChange");
-
         let from = this.currentHp;
         if (deltaHP > 0) {
             if (this.currentHp + deltaHP > this.HP) {
@@ -196,6 +215,8 @@ export default class EnemyCtrl extends cc.Component {
                 this.currentHp += deltaHP;
             }
         }
+        if (from == this.currentHp) return;
+        if (noShowAction == true) return;
         this.showHpChangeAction(from, this.currentHp);
     }
     // 返回 最近的敌方舰艇
@@ -214,7 +235,6 @@ export default class EnemyCtrl extends cc.Component {
                     isAnyOneInFireRange = true;
                 }
                 if (distance <= this.RadarRange) {
-                    enemyInFireRange = enumyCtrlTs;
                     isAnyOneInRadarRange = true;
                 }
             }
@@ -236,14 +256,11 @@ export default class EnemyCtrl extends cc.Component {
                 // 进入射程开火
                 this.aim(enemyInFireRange.node.position);
                 this.fire(enemyInFireRange.node.position);
+                return true;
             } else {
                 if (this.currentWarnLevel == WarnLevel.EnemyInShotRange) {
                     this.currentWarnLevel = WarnLevel.EnemyInView;
                 }
-            }
-            // 时刻瞄准
-            if (enemyInFireRange != null) {
-                this.aim(enemyInFireRange.node.position);
             }
         } else {
             if (this.currentWarnLevel != WarnLevel.none) {
@@ -251,5 +268,6 @@ export default class EnemyCtrl extends cc.Component {
                 this.exitCombat();
             }
         }
+        return false;
     }
 }

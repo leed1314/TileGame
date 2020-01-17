@@ -25,7 +25,8 @@ export default class PlayerCtrl extends cc.Component {
 
     // LIFE-CYCLE CALLBACKS:
 
-
+    shipFireCheckInterval: number = 2;
+    shipFireCheckIntervalRuntime: number = 0;
     /**
      * MaxSpeed 和 MaxForce 应在一个合适的比例之下：
      * 如果 MaxSpeed 过大会出现转向时绕大圈，无法到达终点
@@ -44,7 +45,9 @@ export default class PlayerCtrl extends cc.Component {
     currentPathList: Array<cc.Vec2> = null;
     currentRunningBhv: ShipBhvType = -1;
     currentWarnLevel: WarnLevel = 0;
-
+    selfHealing: number = 1;
+    selfHealingHPShowInterval: number = 3;
+    selfHealingHPShowIntervalCounter: number = 0;
     // 左舷 前位炮参数
     leftFontConnon: CannonModel = new CannonModel(true, 300, 50, 3);
 
@@ -76,7 +79,13 @@ export default class PlayerCtrl extends cc.Component {
     update(dt) {
         this.HpProgressNode.angle = this.node.angle * -1;  // 纠正血条的角度
         this.fireEffectNode.angle = this.node.angle * -1;  // 纠正血条的角度 
-        this.UpdateFireLevelWithHp();
+        // 船上燃烧火焰效果管理
+        if (this.shipFireCheckIntervalRuntime > this.shipFireCheckInterval) {
+            this.shipFireCheckIntervalRuntime = 0;
+            this.UpdateFireLevelWithHp();
+        } else {
+            this.shipFireCheckIntervalRuntime += dt;
+        }
         // 航行管理
         if (this.currentRunningBhv == ShipBhvType.MoveInPath) {
             let bhvMoveTs = this.getComponent(BhvMove);
@@ -102,9 +111,16 @@ export default class PlayerCtrl extends cc.Component {
         } else {
             this.runtimeRadarScanTime += dt;
         }
+        //血量恢复管理
+        if (this.selfHealingHPShowIntervalCounter > this.selfHealingHPShowInterval) {
+            this.selfHealingHPShowIntervalCounter = 0;
+            this.onHPChange(this.selfHealingHPShowInterval * this.selfHealing, this.findEnemyTarget());
+        } else {
+            this.selfHealingHPShowIntervalCounter += dt;
+        }
     }
     async showHpChangeAction(from: number, to: number, ) {
-        // if (this.HpProgressNode.getNumberOfRunningActions() > 0) return;
+        if (this.HpProgressNode.getNumberOfRunningActions() > 0) return;
         this.HpProgressNode.opacity = 255;
         this.HpProgressNode.getComponent(cc.ProgressBar).progress = from / this.HP;
         while (from != to) {
@@ -116,25 +132,26 @@ export default class PlayerCtrl extends cc.Component {
             this.HpProgressNode.getComponent(cc.ProgressBar).progress = from / this.HP;
             await waitForTime(0);
         }
+        let delay = cc.delayTime(0.5);
         let fadeOut = cc.fadeOut(0.3);
-        this.HpProgressNode.runAction(fadeOut);
+        this.HpProgressNode.runAction(cc.sequence(delay, fadeOut));
     }
     UpdateFireLevelWithHp() {
         let HpPercent = this.currentHp / this.HP;
         let currentFire = this.fireEffectNode.childrenCount;
         if (HpPercent < 0.2) {
-            // disaster 保持 5 个火焰效果
-            if (currentFire < 6) {
+            // disaster 保持 6 个火焰效果
+            if (currentFire < 7) {
                 this.createRandomFireEffect();
             }
         } else if (HpPercent < 0.4) {
-            // mid 保持 3 个火焰效果
-            if (currentFire < 4) {
+            // mid 保持 4 个火焰效果
+            if (currentFire < 5) {
                 this.createRandomFireEffect();
             }
         } else if (HpPercent < 0.7) {
-            // small  保持 1 个火焰效果
-            if (currentFire < 2) {
+            // small  保持 2 个火焰效果
+            if (currentFire < 3) {
                 this.createRandomFireEffect();
             }
         }
@@ -154,9 +171,8 @@ export default class PlayerCtrl extends cc.Component {
         this.node.parent.addChild(sinkEffect);
         this.node.destroy();
     }
-    onHPChange(deltaHP: number) {
+    onHPChange(deltaHP: number, noShowAction?: boolean) {
         console.log("onHPChange");
-
         let from = this.currentHp;
         if (deltaHP > 0) {
             if (this.currentHp + deltaHP > this.HP) {
@@ -172,6 +188,9 @@ export default class PlayerCtrl extends cc.Component {
                 this.currentHp += deltaHP;
             }
         }
+        if (from == this.currentHp) return;
+        this.restoreShipModelToLocal();
+        if (noShowAction == true) return;
         this.showHpChangeAction(from, this.currentHp);
     }
     // 返回 最近的敌方舰艇 
@@ -217,15 +236,12 @@ export default class PlayerCtrl extends cc.Component {
                 // 进入射程开火
                 this.aim(enemyInFireRange.node.position);
                 this.fire(enemyInFireRange.node.position);
+                return true;
             } else {
                 if (this.currentWarnLevel == WarnLevel.EnemyInShotRange) {
                     this.currentWarnLevel = WarnLevel.EnemyInView;
                     cc.find("Canvas/GameInfoNotice").getComponent(GameInfoNotice).CastGameInfo(new InfoRadar("超出了射程"));
                 }
-            }
-            // 时刻瞄准
-            if (enemyInFireRange != null) {
-                this.aim(enemyInFireRange.node.position);
             }
         } else {
             if (this.currentWarnLevel != WarnLevel.none) {
@@ -234,6 +250,7 @@ export default class PlayerCtrl extends cc.Component {
                 this.exitCombat();
             }
         }
+        return false;
     }
 
     enterCombat() {
@@ -269,6 +286,7 @@ export default class PlayerCtrl extends cc.Component {
     loadShipModelFromLocal() {
         let result = localStorageGet(localStorageMap.PlayerShipData, "array") as Array<ShipModel>;
         if (result.length == 0) {
+            // if (true) {
             // 使用默认的 runtime 数据
             this.syncShipModeFromRuntime();
         } else {
@@ -282,6 +300,8 @@ export default class PlayerCtrl extends cc.Component {
             this.HP = localShipData.HP;
             this.currentHp = localShipData.currentHp;
             this.leftFontConnon = localShipData.leftFontConnon;
+            this.selfHealing = localShipData.selfHealing;
+            this.syncShipModeToRuntime();
         }
     }
     /**
@@ -304,6 +324,7 @@ export default class PlayerCtrl extends cc.Component {
         this.HP = PlayerShipModel.HP;
         this.currentHp = PlayerShipModel.currentHp;
         this.leftFontConnon = PlayerShipModel.leftFontConnon;
+        this.selfHealing = PlayerShipModel.selfHealing;
     }
     /**
      * 将次实例中的玩家数据同步到运行时
@@ -318,5 +339,6 @@ export default class PlayerCtrl extends cc.Component {
         PlayerShipModel.HP = this.HP;
         PlayerShipModel.currentHp = this.currentHp;
         PlayerShipModel.leftFontConnon = this.leftFontConnon;
+        PlayerShipModel.selfHealing = this.selfHealing;
     }
 }

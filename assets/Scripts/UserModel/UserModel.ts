@@ -23,19 +23,21 @@ export class ShipModel {
     RadarRange: number = 900; // 雷达照射范围
     HP: number = 100; // 最高血量
     currentHp: number = 100; // 当前血量
+    selfHealing: number = 1; // 单位 血量/秒
     // 左舷 前位炮
     leftFontConnon: CannonModel = null;
 
-    constructor(MaxSpeed: number, MaxForce: number, radarScanInterval: number, ShipName: string, FireRange: number, RadarRange: number, HP: number, currentHp: number,
+    constructor(MaxSpeed: number, MaxForce: number, radarScanInterval: number, ShipName: string, FireRange: number, RadarRange: number, HP: number, currentHp: number, selfHealing: number,
         leftFontConnon: CannonModel) {
         this.MaxSpeed = MaxSpeed;
         this.MaxForce = MaxForce;
         this.radarScanInterval = radarScanInterval;
         this.ShipName = ShipName;
         this.FireRange = FireRange;
-        this, RadarRange = RadarRange;
+        this.RadarRange = RadarRange;
         this.HP = HP;
         this.currentHp = currentHp;
+        this.selfHealing = selfHealing;
         this.leftFontConnon = leftFontConnon;
     }
 }
@@ -47,19 +49,22 @@ export class GameData {
     menu = {
         state: 0
     }
+    exp: number = 15255;//exp
+    exp_max: number = 100000;//升级目标exp
+    level: number = 0;
     skill_point: number = 15;//剩余的技能点
     used_point: number = 0;//已经使用的技能点
     UISkill = {
-        id:0,
-        pic:0,
-        name:'??',
-        level:0,
-        info:'未知'
+        id: 0,
+        pic: 0,
+        name: '??',
+        level: 0,
+        info: '未知'
     }
 }
 //原始数据
 export let GameDataRuntime: GameData = new GameData();
-export let PlayerShipModel: ShipModel = new ShipModel(80, 140, 2, "小破船", 300, 400, 100, 100, new CannonModel(true, 300, 20, 3));
+export let PlayerShipModel: ShipModel = new ShipModel(80, 140, 2, "小破船", 300, 400, 100, 100, 1, new CannonModel(true, 250, 20, 3));
 //数据模型绑定,定义后不能修改顺序
 VM.add(GameDataRuntime, 'GameDataRuntime');    //定义全局tag
 VM.add(PlayerShipModel, 'PlayerShipModel');

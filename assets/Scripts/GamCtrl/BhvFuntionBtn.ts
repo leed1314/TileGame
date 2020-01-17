@@ -1,4 +1,5 @@
 import { InputType } from "../Input/BhvInputMap";
+import UIRoot from "./UIRoot";
 
 // Learn TypeScript:
 //  - [Chinese] https://docs.cocos.com/creator/manual/zh/scripting/typescript.html
@@ -33,11 +34,14 @@ export default class BhvFuntionBtn extends cc.Component {
 
     // update (dt) {}
 
+    syncCanmeraToShip(){
+        cc.find("Canvas/Main Camera").x = cc.find("Canvas/playerSpawn/Player").x;
+        cc.find("Canvas/Main Camera").y = cc.find("Canvas/playerSpawn/Player").y;
+    }
     //点击
     private onClick(event: cc.Touch, pos: cc.Vec2) {
         console.log(this.name, "onClick", pos.toString());
-        cc.find("Canvas/Main Camera").x = cc.find("Canvas/playerSpawn/Player").x;
-        cc.find("Canvas/Main Camera").y = cc.find("Canvas/playerSpawn/Player").y;
+        cc.find("Canvas/UIRoot").getComponent(UIRoot).showMainMenu();
     }
     //拖拽
     private onDrag(event: cc.Touch, posDelta: cc.Vec2) {
