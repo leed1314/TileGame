@@ -323,7 +323,7 @@ export let ConfigSkills = [
         pic: 15,
         max: 1,
         name: '快速修理',
-        info: '在战斗过程中也保持20%的回复速度',
+        info: '在战斗过程中也保持25%的回复速度',
         type: 0,  //技能类型 0 - 主动技能 1- 被动技能 2- buff技能
     },
     {

@@ -5904,7 +5904,7 @@
       "ctor": "Float64Array",
       "array": [
         0,
-        0,
+        -12.6,
         0,
         0,
         0,
@@ -5927,7 +5927,7 @@
     "_groupIndex": 0,
     "groupIndex": 0,
     "showInEditor": false,
-    "_id": "38KTGzl9REPLwnnCBDVjBT"
+    "_id": "c7Ew9zV9NKHoCPo8y6YxzB"
   },
   {
     "__type__": "cc.Label",
@@ -5957,7 +5957,7 @@
     "_N$fontFamily": "Arial",
     "_N$overflow": 0,
     "_N$cacheMode": 0,
-    "_id": "d88KdFaqZKd6R+Uy8N10Xf"
+    "_id": "82mzbEDL9MIqZi1MvuwOyr"
   },
   {
     "__type__": "cc.PrivateNode",
@@ -5996,8 +5996,8 @@
       "__type__": "TypedArray",
       "ctor": "Float64Array",
       "array": [
-        0,
-        0,
+        85.56,
+        -12.6,
         0,
         0,
         0,
@@ -6020,7 +6020,7 @@
     "_groupIndex": 0,
     "groupIndex": 0,
     "showInEditor": false,
-    "_id": "ded1DNdcFDtqzo48MNJLVy"
+    "_id": "841PnmrOhPnqWMKSVfda6Q"
   },
   {
     "__type__": "cc.Label",
@@ -6050,7 +6050,7 @@
     "_N$fontFamily": "Arial",
     "_N$overflow": 0,
     "_N$cacheMode": 0,
-    "_id": "f1rED4JPlAcrGRJXSdco0y"
+    "_id": "f8prE2px1HZZCNwZ3TtHWL"
   },
   {
     "__type__": "cc.RichText",
@@ -6228,7 +6228,7 @@
       "ctor": "Float64Array",
       "array": [
         0,
-        0,
+        -12.6,
         0,
         0,
         0,
@@ -6251,7 +6251,7 @@
     "_groupIndex": 0,
     "groupIndex": 0,
     "showInEditor": false,
-    "_id": "fdhvbF0ytB1qEK3wkoBDvY"
+    "_id": "70fx9uobRBvrRBR8aIVB0g"
   },
   {
     "__type__": "cc.Label",
@@ -6281,7 +6281,7 @@
     "_N$fontFamily": "Arial",
     "_N$overflow": 0,
     "_N$cacheMode": 0,
-    "_id": "dfnggLPG9Hp4hbRPwu96bS"
+    "_id": "04NwikTK9LNpWJgRcQrotD"
   },
   {
     "__type__": "cc.PrivateNode",
@@ -6320,8 +6320,8 @@
       "__type__": "TypedArray",
       "ctor": "Float64Array",
       "array": [
-        0,
-        0,
+        71.12,
+        -12.6,
         0,
         0,
         0,
@@ -6344,7 +6344,7 @@
     "_groupIndex": 0,
     "groupIndex": 0,
     "showInEditor": false,
-    "_id": "10PvZb1gRMp56AbnM+xfB8"
+    "_id": "faLpMYsZVG74mFbF1CoC97"
   },
   {
     "__type__": "cc.Label",
@@ -6374,7 +6374,7 @@
     "_N$fontFamily": "Arial",
     "_N$overflow": 0,
     "_N$cacheMode": 0,
-    "_id": "35QJz/8sVCyqep0h/+v94u"
+    "_id": "bf0L/Fps9D+oap5AMWcecq"
   },
   {
     "__type__": "cc.RichText",

@@ -2,6 +2,7 @@ import { GameDataRuntime } from "../../UserModel/UserModel";
 import { VM } from "../../Mvvm/ViewModel";
 import { PlayerSKills, ConfigSkills } from "../../UserModel/StroageModel";
 import BhvFrameIndex from "./BhvFrameIndex";
+import PlayerCtrl from "../PlayerCtrl";
 
 const { ccclass, property } = cc._decorator;
 
@@ -153,7 +154,7 @@ export default class CellSkillIcon extends cc.Component {
         if (player == null) return;
         let skill = ConfigSkills.find(data => data.id === player.skillId); // 上级技能 配置数据
         if (player.level >= skill.max) {
-        // if (player.level >= cod.point) {
+            // if (player.level >= cod.point) {
             return true;
         } else {
             return false;
@@ -187,6 +188,13 @@ export default class CellSkillIcon extends cc.Component {
             btn_add.active = false;
         }
 
+        let spawnNode = cc.find("Canvas/playerSpawn");
+        let playerList = spawnNode.getComponentsInChildren(PlayerCtrl);
+        if (playerList.length > 0) {
+            for (var i = 0; i < playerList.length; i++) {
+                playerList[i].syncRunTimeSkillToUI();
+            }
+        }
     }
 
     // update (dt) {}

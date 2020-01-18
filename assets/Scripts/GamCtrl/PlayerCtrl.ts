@@ -9,6 +9,7 @@ import EnemyCtrl from "./EnemyCtrl";
 import GameInfoNotice, { InfoRadar } from "./GameInfoNotice";
 import EnemyInfoDot from "./EnemyInfoDot";
 import { CannonModel, ShipModel, PlayerShipModel } from "../UserModel/UserModel";
+import { PlayerSKills } from "../UserModel/StroageModel";
 
 const { ccclass, property } = cc._decorator;
 export enum ShipBhvType {
@@ -32,20 +33,20 @@ export default class PlayerCtrl extends cc.Component {
      * 如果 MaxSpeed 过大会出现转向时绕大圈，无法到达终点
      * 如果 MaxForce 过大会出现转向时加速度变化过快，同样出现无法到达终点
      */
-    MaxSpeed: number = 100; //单位: 像素/秒
+    _MaxSpeed: number = 100; //单位: 像素/秒
     MaxForce: number = 200;
     TruningSpeedRatio: number = 5; // 转向加力系数
     radarScanInterval: number = 2; // 雷达扫描间隔
     runtimeRadarScanTime: number = 0;
     ShipName: string = "黑珍珠";
-    HP: number = 100;
-    FireRange: number = 300; // 火炮射程
+    _HP: number = 100;
+    _FireRange: number = 300; // 火炮射程
     RadarRange: number = 900; // 雷达照射范围
     currentHp: number = 100;
     currentPathList: Array<cc.Vec2> = null;
     currentRunningBhv: ShipBhvType = -1;
     currentWarnLevel: WarnLevel = 0;
-    selfHealing: number = 1;
+    _selfHealing: number = 1;
     selfHealingHPShowInterval: number = 3;
     selfHealingHPShowIntervalCounter: number = 0;
     // 左舷前位炮
@@ -57,6 +58,133 @@ export default class PlayerCtrl extends cc.Component {
     // 右舷后位炮
     rightBackConnon: CannonModel = null;
 
+    get HP() {
+        return this._HP + this.shipMaxHpAdd;
+    }
+    set HP(val) {
+        this._HP = val;
+    }
+    get MaxSpeed() {
+        return this._MaxSpeed + this.shipMaxSpeedAdd;
+    }
+    set MaxSpeed(val) {
+        this._MaxSpeed = val;
+    }
+    get FireRange() {
+        return this._FireRange + this.connonRangeAdd;
+    }
+    set FireRange(val) {
+        this._FireRange = val;
+    }
+    get selfHealing() {
+        return this._selfHealing + this.shipSelfHealAdd;
+    }
+    set selfHealing(val) {
+        this._selfHealing = val;
+    }
+
+    // 增强属性
+    _connonSpeedAdd: number = 0;// 炮弹飞行速度增幅
+    _connonRangeAdd: number = 0;// 炮弹射程增幅
+    _skillAparKillerChance: number = 0;//桅杆杀手触发概率
+    _connonReloadIntervalSub: number = 0;//火炮装弹时间缩减
+    _skillFastShootChance: number = 0;//急速射击触发概率
+    _connonDamageAdd: number = 0;//火炮伤害增幅
+    _skillCritShootChance: number = 0; // 毁灭打击触发概率
+    _shipMaxSpeedAdd: number = 0;//最高航速增幅
+    _shipMaxHpAdd: number = 0;//最高血量增幅
+    _skillLuckyWave: number = 0;//幸运海浪触发概率
+    _shipSelfHealAdd: number = 0;//每秒回血增幅
+    _skillFastRepair: number = 0; // 战斗中回血比例
+    get connonSpeedAdd() {
+        let runtimeCalulate = PlayerSKills.find(data => data.id === 1); // 技能 1 的选点数据
+        return runtimeCalulate.level * 20;
+    }
+    set connonSpeedAdd(val) {
+        this._connonSpeedAdd = val;
+    }
+    get connonRangeAdd() {
+        let runtimeCalulate = PlayerSKills.find(data => data.id === 2);
+        return runtimeCalulate.level * 25;
+    }
+    set connonRangeAdd(val) {
+        this._connonRangeAdd = val;
+    }
+    get skillAparKillerChance() {
+        let runtimeCalulate = PlayerSKills.find(data => data.id === 3);
+        let runtimeCalulate2 = PlayerSKills.find(data => data.id === 4);
+        return runtimeCalulate.level * 5 + runtimeCalulate2.level * 1;
+    }
+    set skillAparKillerChance(val) {
+        this._skillAparKillerChance = val;
+    }
+    get connonReloadIntervalSub() {
+        let runtimeCalulate = PlayerSKills.find(data => data.id === 5);
+        return runtimeCalulate.level * 0.2;
+    }
+    set connonReloadIntervalSub(val) {
+        this._connonReloadIntervalSub = val;
+    }
+    get skillFastShootChance() {
+        let runtimeCalulate = PlayerSKills.find(data => data.id === 6);
+        let runtimeCalulate2 = PlayerSKills.find(data => data.id === 7);
+        return runtimeCalulate.level * 5 + runtimeCalulate2.level * 1;
+    }
+    set skillFastShootChance(val) {
+        this._skillFastShootChance = val;
+    }
+    get connonDamageAdd() {
+        let runtimeCalulate = PlayerSKills.find(data => data.id === 8);
+        return runtimeCalulate.level * 5;
+    }
+    set connonDamageAdd(val) {
+        this._connonDamageAdd = val;
+    }
+    get skillCritShootChance() {
+        let runtimeCalulate = PlayerSKills.find(data => data.id === 9);
+        let runtimeCalulate2 = PlayerSKills.find(data => data.id === 10);
+        return runtimeCalulate.level * 5 + runtimeCalulate2.level * 1;
+    }
+    set skillCritShootChance(val) {
+        this._skillCritShootChance = val;
+    }
+    get shipMaxSpeedAdd() {
+        let runtimeCalulate = PlayerSKills.find(data => data.id === 11);
+        return runtimeCalulate.level * 20;
+    }
+    set shipMaxSpeedAdd(val) {
+        this._shipMaxSpeedAdd = val;
+    }
+    get shipMaxHpAdd() {
+        let runtimeCalulate = PlayerSKills.find(data => data.id === 12);
+        return runtimeCalulate.level * 20;
+    }
+    set shipMaxHpAdd(val) {
+        this._shipMaxHpAdd = val;
+    }
+    get skillLuckyWave() {
+        let runtimeCalulate = PlayerSKills.find(data => data.id === 13);
+        let runtimeCalulate2 = PlayerSKills.find(data => data.id === 14);
+        return runtimeCalulate.level * 5 + runtimeCalulate2.level * 1;
+    }
+    set skillLuckyWave(val) {
+        this._skillLuckyWave = val;
+    }
+    get shipSelfHealAdd() {
+        let runtimeCalulate = PlayerSKills.find(data => data.id === 15);
+        return runtimeCalulate.level * 1;
+    }
+    set shipSelfHealAdd(val) {
+        this._shipSelfHealAdd = val;
+    }
+    get skillFastRepair() {
+        let runtimeCalulate = PlayerSKills.find(data => data.id === 16);
+        let runtimeCalulate2 = PlayerSKills.find(data => data.id === 17);
+        return runtimeCalulate.level * 25 + runtimeCalulate2.level * 5;
+    }
+    set skillFastRepair(val) {
+        this._skillFastRepair = val;
+    }
     // 1炮位 实例
     @property(cc.Node)
     leftFrontConnonNode: cc.Node = null;
@@ -82,10 +210,30 @@ export default class PlayerCtrl extends cc.Component {
 
     start() {
         this.loadShipModelFromLocal();
+        this.syncRunTimeSkillToUI();
 
         this.UpdateGunSet();
         this.HpProgressNode.getComponent(cc.ProgressBar).progress = this.currentHp / this.HP; //初始化血条
         this.onHPChange(0);
+    }
+    syncRunTimeSkillToUI() {
+        PlayerShipModel.connonSpeedAdd = this.connonSpeedAdd;
+        PlayerShipModel.connonRangeAdd = this.connonRangeAdd;
+        PlayerShipModel.skillAparKillerChance = this.skillAparKillerChance;
+        PlayerShipModel.connonReloadIntervalSub = this.connonReloadIntervalSub;
+        PlayerShipModel.skillFastShootChance = this.skillFastShootChance;
+        PlayerShipModel.connonDamageAdd = this.connonDamageAdd;
+        PlayerShipModel.skillCritShootChance = this.skillCritShootChance;
+        PlayerShipModel.shipMaxSpeedAdd = this.shipMaxSpeedAdd;
+        PlayerShipModel.shipMaxHpAdd = this.shipMaxHpAdd;
+        PlayerShipModel.skillLuckyWave = this.skillLuckyWave;
+        PlayerShipModel.shipSelfHealAdd = this.shipSelfHealAdd;
+        PlayerShipModel.skillFastRepair = this.skillFastRepair;
+
+        this.leftFrontConnonNode.getComponent(ShipConnon).setExternal(this.connonSpeedAdd, this.connonReloadIntervalSub, this.connonDamageAdd, this.skillAparKillerChance, this.skillFastShootChance, this.skillCritShootChance);
+        this.leftBackConnonNode.getComponent(ShipConnon).setExternal(this.connonSpeedAdd, this.connonReloadIntervalSub, this.connonDamageAdd, this.skillAparKillerChance, this.skillFastShootChance, this.skillCritShootChance);
+        this.rightFrontConnonNode.getComponent(ShipConnon).setExternal(this.connonSpeedAdd, this.connonReloadIntervalSub, this.connonDamageAdd, this.skillAparKillerChance, this.skillFastShootChance, this.skillCritShootChance);
+        this.rightBackConnonNode.getComponent(ShipConnon).setExternal(this.connonSpeedAdd, this.connonReloadIntervalSub, this.connonDamageAdd, this.skillAparKillerChance, this.skillFastShootChance, this.skillCritShootChance);
     }
     UpdateGunSet() {
         if (this.leftFontConnon != null && this.leftFontConnon.isActive == true) {

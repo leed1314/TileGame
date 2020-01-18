@@ -11,15 +11,41 @@ export default class ShipConnon extends cc.Component {
     @property(cc.Prefab)
     connonFireworkPrefab: cc.Prefab = null;
     // LIFE-CYCLE CALLBACKS:
-    bulletSpeed: number = 300;
-    bulletDamage: number = 20;
-    reloadTime: number = 3.0;
+    _bulletSpeed: number = 300;
+    _bulletDamage: number = 20;
+    _reloadTime: number = 3.0;
     runtimeReloadTime: number = 0;
     isReload: boolean = false;
     belongToUUid: string = null;
     belongToShipName: string = null;
     belongTo: GrounpType = -1;
     ConnonName: string = null;
+    get bulletSpeed() {
+        return this._bulletSpeed + this._connonSpeedAdd;
+    }
+    set bulletSpeed(val) {
+        this._bulletSpeed = val;
+    }
+    get bulletDamage() {
+        return this._bulletDamage + this._connonDamageAdd;
+    }
+    set bulletDamage(val) {
+        this._bulletDamage = val;
+    }
+    get reloadTime() {
+        let sub = this._reloadTime - this._connonReloadIntervalSub;
+        return sub < 0 ? 0.5 : sub;
+    }
+    set reloadTime(val) {
+        this._reloadTime = val;
+    }
+
+    _connonSpeedAdd: number = 0;// 炮弹飞行速度增幅
+    _skillAparKillerChance: number = 0;//桅杆杀手触发概率
+    _connonReloadIntervalSub: number = 0;//火炮装弹时间缩减
+    _skillFastShootChance: number = 0;//急速射击触发概率
+    _connonDamageAdd: number = 0;//火炮伤害增幅
+    _skillCritShootChance: number = 0; // 毁灭打击触发概率
     // onLoad () {}
 
     start() {
@@ -32,7 +58,7 @@ export default class ShipConnon extends cc.Component {
             this.runtimeReloadTime += dt;
             if (this.runtimeReloadTime >= this.reloadTime) {
                 this.isReload = true;
-                if(GrounpType.Player == this.belongTo){
+                if (GrounpType.Player == this.belongTo) {
                     cc.find("Canvas/GameInfoNotice").getComponent(GameInfoNotice).CastGameInfo(new InfoConnon(this.ConnonName, "填装完毕"));
                 }
             }
@@ -46,6 +72,14 @@ export default class ShipConnon extends cc.Component {
         this.bulletSpeed = bulletSpeed;
         this.bulletDamage = bulletDamage;
         this.reloadTime = reloadTime;
+    }
+    setExternal(_connonSpeedAdd, _connonReloadIntervalSub, _connonDamageAdd, _skillAparKillerChance, _skillFastShootChance, _skillCritShootChance) {
+        this._connonSpeedAdd = _connonSpeedAdd;
+        this._connonReloadIntervalSub = _connonReloadIntervalSub;
+        this._connonDamageAdd = _connonDamageAdd;
+        this._skillAparKillerChance = _skillAparKillerChance;
+        this._skillFastShootChance = _skillFastShootChance;
+        this._skillCritShootChance = _skillCritShootChance;
     }
     aim(targetPos: cc.Vec2) {
         let mapNode = cc.find("Canvas/TiledMap");
