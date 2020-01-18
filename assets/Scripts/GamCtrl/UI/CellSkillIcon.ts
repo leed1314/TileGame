@@ -149,10 +149,11 @@ export default class CellSkillIcon extends cc.Component {
     //检查解锁条件是否满足
     checkConditionFill() {
         let cod = this.data.condition;
-        let player = PlayerSKills.find(data => data.id === cod.skill);
+        let player = PlayerSKills.find(data => data.id === cod.skill); // 上级技能 点选数据
         if (player == null) return;
-        let skill = ConfigSkills.find(data => data.id === player.skillId);
+        let skill = ConfigSkills.find(data => data.id === player.skillId); // 上级技能 配置数据
         if (player.level >= skill.max) {
+        // if (player.level >= cod.point) {
             return true;
         } else {
             return false;

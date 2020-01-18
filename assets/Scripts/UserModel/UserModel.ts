@@ -24,11 +24,35 @@ export class ShipModel {
     HP: number = 100; // 最高血量
     currentHp: number = 100; // 当前血量
     selfHealing: number = 1; // 单位 血量/秒
+
+    // 增强属性
+    connonSpeedAdd: number = 0;// 炮弹飞行速度增幅
+    connonRangeAdd: number = 0;// 炮弹射程增幅
+    skillAparKillerChance: number = 0;//桅杆杀手触发概率
+    connonReloadIntervalSub: number = 0;//火炮装弹时间缩减
+    skillFastShootChance: number = 0;//急速射击触发概率
+    connonDamageAdd: number = 0;//火炮伤害增幅
+    skillCritShootChance: number = 0; // 毁灭打击触发概率
+    shipMaxSpeedAdd: number = 0;//最高航速增幅
+    shipMaxHpAdd: number = 0;//最高血量增幅
+    skillLuckyWave: number = 0;//幸运海浪触发概率
+    shipSelfHealAdd: number = 0;//每秒回血增幅
+    skillFastRepair: number = 0; // 战斗中回血比例
+
     // 左舷 前位炮
     leftFontConnon: CannonModel = null;
+    // 左舷 后位炮
+    leftBackConnon: CannonModel = null;
+    // 右舷 前位炮
+    rightFontConnon: CannonModel = null;
+    // 右舷 后位炮
+    rightBackConnon: CannonModel = null;
 
-    constructor(MaxSpeed: number, MaxForce: number, radarScanInterval: number, ShipName: string, FireRange: number, RadarRange: number, HP: number, currentHp: number, selfHealing: number,
-        leftFontConnon: CannonModel) {
+    constructor(MaxSpeed: number, MaxForce: number, radarScanInterval: number, ShipName: string, FireRange: number, RadarRange: number, HP: number, currentHp: number, selfHealing: number
+        ,leftFontConnon: CannonModel
+        ,leftBackConnon: CannonModel
+        ,rightFontConnon: CannonModel
+        ,rightBackConnon: CannonModel) {
         this.MaxSpeed = MaxSpeed;
         this.MaxForce = MaxForce;
         this.radarScanInterval = radarScanInterval;
@@ -39,7 +63,11 @@ export class ShipModel {
         this.currentHp = currentHp;
         this.selfHealing = selfHealing;
         this.leftFontConnon = leftFontConnon;
+        this.leftBackConnon = leftBackConnon;
+        this.rightFontConnon = rightFontConnon;
+        this.rightBackConnon = rightBackConnon;
     }
+
 }
 
 export class GameData {
@@ -52,8 +80,7 @@ export class GameData {
     exp: number = 15255;//exp
     exp_max: number = 100000;//升级目标exp
     level: number = 0;
-    skill_point: number = 15;//剩余的技能点
-    used_point: number = 0;//已经使用的技能点
+    skill_point: number = 99;//剩余的技能点
     UISkill = {
         id: 0,
         pic: 0,
@@ -64,7 +91,11 @@ export class GameData {
 }
 //原始数据
 export let GameDataRuntime: GameData = new GameData();
-export let PlayerShipModel: ShipModel = new ShipModel(80, 140, 2, "小破船", 300, 400, 100, 100, 1, new CannonModel(true, 250, 20, 3));
+export let PlayerShipModel: ShipModel = new ShipModel(80, 140, 2, "小破船", 300, 400, 100, 100, 1
+, new CannonModel(true, 200, 5, 3)
+, new CannonModel(true, 200, 5, 3)
+, new CannonModel(true, 200, 5, 3)
+, new CannonModel(true, 200, 5, 3));
 //数据模型绑定,定义后不能修改顺序
 VM.add(GameDataRuntime, 'GameDataRuntime');    //定义全局tag
 VM.add(PlayerShipModel, 'PlayerShipModel');

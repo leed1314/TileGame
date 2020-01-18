@@ -48,11 +48,28 @@ export default class PlayerCtrl extends cc.Component {
     selfHealing: number = 1;
     selfHealingHPShowInterval: number = 3;
     selfHealingHPShowIntervalCounter: number = 0;
-    // 左舷 前位炮参数
-    leftFontConnon: CannonModel = new CannonModel(true, 300, 50, 3);
+    // 左舷前位炮
+    leftFontConnon: CannonModel = null;
+    // 左舷后位炮
+    leftBackConnon: CannonModel = null;
+    // 右舷前位炮
+    rightFontConnon: CannonModel = null;
+    // 右舷后位炮
+    rightBackConnon: CannonModel = null;
 
+    // 1炮位 实例
     @property(cc.Node)
     leftFrontConnonNode: cc.Node = null;
+    // 2炮位 实例
+    @property(cc.Node)
+    leftBackConnonNode: cc.Node = null;
+    // 3炮位 实例
+    @property(cc.Node)
+    rightFrontConnonNode: cc.Node = null;
+    // 4炮位 实例
+    @property(cc.Node)
+    rightBackConnonNode: cc.Node = null;
+
     @property(cc.Prefab)
     shipSinkEffect: cc.Prefab = null;
     @property([cc.Prefab])
@@ -66,16 +83,32 @@ export default class PlayerCtrl extends cc.Component {
     start() {
         this.loadShipModelFromLocal();
 
-        if (this.leftFontConnon.isActive == true) {
+        this.UpdateGunSet();
+        this.HpProgressNode.getComponent(cc.ProgressBar).progress = this.currentHp / this.HP; //初始化血条
+        this.onHPChange(0);
+    }
+    UpdateGunSet() {
+        if (this.leftFontConnon != null && this.leftFontConnon.isActive == true) {
             this.leftFrontConnonNode.getComponent(ShipConnon).init(this.node.uuid, GrounpType.Player, this.ShipName, "左舷前位炮", this.leftFontConnon.bulletSpeed, this.leftFontConnon.bulletDamage, this.leftFontConnon.reloadTime);
         } else {
             this.leftFrontConnonNode.active = false;
         }
-
-        this.HpProgressNode.getComponent(cc.ProgressBar).progress = this.currentHp / this.HP; //初始化血条
-        this.onHPChange(0);
+        if (this.leftBackConnon != null && this.leftBackConnon.isActive == true) {
+            this.leftBackConnonNode.getComponent(ShipConnon).init(this.node.uuid, GrounpType.Player, this.ShipName, "左舷后位炮", this.leftBackConnon.bulletSpeed, this.leftBackConnon.bulletDamage, this.leftBackConnon.reloadTime);
+        } else {
+            this.leftBackConnonNode.active = false;
+        }
+        if (this.rightFontConnon != null && this.rightFontConnon.isActive == true) {
+            this.rightFrontConnonNode.getComponent(ShipConnon).init(this.node.uuid, GrounpType.Player, this.ShipName, "右舷前位炮", this.rightFontConnon.bulletSpeed, this.rightFontConnon.bulletDamage, this.rightFontConnon.reloadTime);
+        } else {
+            this.rightFrontConnonNode.active = false;
+        }
+        if (this.rightBackConnon != null && this.rightBackConnon.isActive == true) {
+            this.rightBackConnonNode.getComponent(ShipConnon).init(this.node.uuid, GrounpType.Player, this.ShipName, "右舷后位炮", this.rightBackConnon.bulletSpeed, this.rightBackConnon.bulletDamage, this.rightBackConnon.reloadTime);
+        } else {
+            this.rightBackConnonNode.active = false;
+        }
     }
-
     update(dt) {
         this.HpProgressNode.angle = this.node.angle * -1;  // 纠正血条的角度
         this.fireEffectNode.angle = this.node.angle * -1;  // 纠正血条的角度 
@@ -114,7 +147,11 @@ export default class PlayerCtrl extends cc.Component {
         //血量恢复管理
         if (this.selfHealingHPShowIntervalCounter > this.selfHealingHPShowInterval) {
             this.selfHealingHPShowIntervalCounter = 0;
-            this.onHPChange(this.selfHealingHPShowInterval * this.selfHealing, this.findEnemyTarget());
+            if (this.isInCanbat() == true) {
+
+            } else {
+                this.onHPChange(this.selfHealingHPShowInterval * this.selfHealing);
+            }
         } else {
             this.selfHealingHPShowIntervalCounter += dt;
         }
@@ -193,6 +230,27 @@ export default class PlayerCtrl extends cc.Component {
         if (noShowAction == true) return;
         this.showHpChangeAction(from, this.currentHp);
     }
+    isInCanbat() {
+        let spawnNode = cc.find("Canvas/playerSpawn");
+        let enemyList = spawnNode.getComponentsInChildren(EnemyCtrl);
+        console.log("findEnemyTarget length", enemyList.length);
+        if (enemyList.length > 0) {
+            let isAnyOneInFireRange = false;
+            let isAnyOneInRadarRange = false;
+            for (var i = 0; i < enemyList.length; i++) {
+                let enumyCtrlTs = enemyList[i];
+                let distance = enumyCtrlTs.node.position.sub(this.node.position).mag();
+                if (distance <= this.FireRange) {
+                    isAnyOneInFireRange = true;
+                    return true;
+                }
+                if (distance <= this.RadarRange) {
+                    isAnyOneInRadarRange = true;
+                }
+            }
+        }
+        return false;
+    }
     // 返回 最近的敌方舰艇 
     findEnemyTarget() {
         let spawnNode = cc.find("Canvas/playerSpawn");
@@ -236,7 +294,6 @@ export default class PlayerCtrl extends cc.Component {
                 // 进入射程开火
                 this.aim(enemyInFireRange.node.position);
                 this.fire(enemyInFireRange.node.position);
-                return true;
             } else {
                 if (this.currentWarnLevel == WarnLevel.EnemyInShotRange) {
                     this.currentWarnLevel = WarnLevel.EnemyInView;
@@ -250,7 +307,6 @@ export default class PlayerCtrl extends cc.Component {
                 this.exitCombat();
             }
         }
-        return false;
     }
 
     enterCombat() {
@@ -265,14 +321,53 @@ export default class PlayerCtrl extends cc.Component {
         let fadeIn = cc.fadeTo(1.1, 255);
         sailNode.runAction(fadeIn);
     }
+    // // 左舷 前位炮
+    // leftFontConnon: CannonModel = null;
+    // // 左舷 后位炮
+    // leftBackConnon: CannonModel = null;
+    // // 右舷 前位炮
+    // rightFontConnon: CannonModel = null;
+    // // 右舷 后位炮
+    // rightBackConnon: CannonModel = null;
+
+    // // 1炮位 实例
+    // @property(cc.Node)
+    // leftFrontConnonNode: cc.Node = null;
+    // // 2炮位 实例
+    // @property(cc.Node)
+    // leftBackConnonNode: cc.Node = null;
+    // // 3炮位 实例
+    // @property(cc.Node)
+    // rightFrontConnonNode: cc.Node = null;
+    // // 4炮位 实例
+    // @property(cc.Node)
+    // rightBackConnonNode: cc.Node = null;
     fire(firePos: cc.Vec2) {
         if (this.leftFontConnon.isActive == true) {
             this.leftFrontConnonNode.getComponent(ShipConnon).fire(firePos);
+        }
+        if (this.leftBackConnon.isActive == true) {
+            this.leftBackConnonNode.getComponent(ShipConnon).fire(firePos);
+        }
+        if (this.rightFontConnon.isActive == true) {
+            this.rightFrontConnonNode.getComponent(ShipConnon).fire(firePos);
+        }
+        if (this.rightBackConnon.isActive == true) {
+            this.rightBackConnonNode.getComponent(ShipConnon).fire(firePos);
         }
     }
     aim(firePos: cc.Vec2) {
         if (this.leftFontConnon.isActive == true) {
             this.leftFrontConnonNode.getComponent(ShipConnon).aim(firePos);
+        }
+        if (this.leftBackConnon.isActive == true) {
+            this.leftBackConnonNode.getComponent(ShipConnon).aim(firePos);
+        }
+        if (this.rightFontConnon.isActive == true) {
+            this.rightFrontConnonNode.getComponent(ShipConnon).aim(firePos);
+        }
+        if (this.rightBackConnon.isActive == true) {
+            this.rightBackConnonNode.getComponent(ShipConnon).aim(firePos);
         }
     }
     moveInPath(targetTileIndex: cc.Vec2) {
@@ -284,9 +379,9 @@ export default class PlayerCtrl extends cc.Component {
      * 从本地数据载入上次的玩家数据
      */
     loadShipModelFromLocal() {
+        cc.sys.localStorage.clear();
         let result = localStorageGet(localStorageMap.PlayerShipData, "array") as Array<ShipModel>;
         if (result.length == 0) {
-            // if (true) {
             // 使用默认的 runtime 数据
             this.syncShipModeFromRuntime();
         } else {
@@ -300,6 +395,9 @@ export default class PlayerCtrl extends cc.Component {
             this.HP = localShipData.HP;
             this.currentHp = localShipData.currentHp;
             this.leftFontConnon = localShipData.leftFontConnon;
+            this.leftBackConnon = localShipData.leftBackConnon;
+            this.rightFontConnon = localShipData.rightFontConnon;
+            this.rightBackConnon = localShipData.rightBackConnon;
             this.selfHealing = localShipData.selfHealing;
             this.syncShipModeToRuntime();
         }
@@ -324,6 +422,9 @@ export default class PlayerCtrl extends cc.Component {
         this.HP = PlayerShipModel.HP;
         this.currentHp = PlayerShipModel.currentHp;
         this.leftFontConnon = PlayerShipModel.leftFontConnon;
+        this.leftBackConnon = PlayerShipModel.leftBackConnon;
+        this.rightFontConnon = PlayerShipModel.rightFontConnon;
+        this.rightBackConnon = PlayerShipModel.rightBackConnon;
         this.selfHealing = PlayerShipModel.selfHealing;
     }
     /**
@@ -339,6 +440,9 @@ export default class PlayerCtrl extends cc.Component {
         PlayerShipModel.HP = this.HP;
         PlayerShipModel.currentHp = this.currentHp;
         PlayerShipModel.leftFontConnon = this.leftFontConnon;
+        PlayerShipModel.leftBackConnon = this.leftBackConnon;
+        PlayerShipModel.rightFontConnon = this.rightFontConnon;
+        PlayerShipModel.rightBackConnon = this.rightBackConnon;
         PlayerShipModel.selfHealing = this.selfHealing;
     }
 }
