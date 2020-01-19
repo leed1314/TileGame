@@ -106,6 +106,9 @@ export default class BhvFollowPath extends cc.Component {
     }
     // function 绘制航线
     DrawMovePath(path: Array<cc.Vec2>) {
+        
+        return;
+
         if (path.length > 0) {
             let mapCtrlTs = cc.find("Canvas/TiledMap").getComponent(MapCtrl);
             let pathGraphics = cc.find("Canvas/playerSpawn/SailPathGraphics").getComponent(cc.Graphics);

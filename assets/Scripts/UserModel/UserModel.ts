@@ -49,10 +49,10 @@ export class ShipModel {
     rightBackConnon: CannonModel = null;
 
     constructor(MaxSpeed: number, MaxForce: number, radarScanInterval: number, ShipName: string, FireRange: number, RadarRange: number, HP: number, currentHp: number, selfHealing: number
-        ,leftFontConnon: CannonModel
-        ,leftBackConnon: CannonModel
-        ,rightFontConnon: CannonModel
-        ,rightBackConnon: CannonModel) {
+        , leftFontConnon: CannonModel
+        , leftBackConnon: CannonModel
+        , rightFontConnon: CannonModel
+        , rightBackConnon: CannonModel) {
         this.MaxSpeed = MaxSpeed;
         this.MaxForce = MaxForce;
         this.radarScanInterval = radarScanInterval;
@@ -73,14 +73,16 @@ export class ShipModel {
 export class GameData {
     MapSize: cc.Size = null;
     TileSize: cc.Size = null;
+    playerWaveIndex: number = 0;
     //菜单状态（代表选择了哪个菜单
     menu = {
         state: 0
     }
-    exp: number = 15255;//exp
-    exp_max: number = 100000;//升级目标exp
+    exp: number = 0;//exp
+    exp_max: number = 50;//升级目标exp
+    expPerEnemy: number = 50;
     level: number = 0;
-    skill_point: number = 99;//剩余的技能点
+    skill_point: number = 1;//剩余的技能点
     UISkill = {
         id: 0,
         pic: 0,
@@ -92,10 +94,10 @@ export class GameData {
 //原始数据
 export let GameDataRuntime: GameData = new GameData();
 export let PlayerShipModel: ShipModel = new ShipModel(80, 200, 0.6, "小破船", 200, 300, 100, 100, 1
-, new CannonModel(true, 200, 5, 4)
-, new CannonModel(true, 200, 5, 3)
-, new CannonModel(true, 200, 5, 2)
-, new CannonModel(true, 200, 5, 1));
+    , new CannonModel(true, 200, 10, 4)
+    , new CannonModel(true, 200, 10, 3)
+    , new CannonModel(true, 200, 10, 2)
+    , new CannonModel(true, 200, 10, 1));
 //数据模型绑定,定义后不能修改顺序
 VM.add(GameDataRuntime, 'GameDataRuntime');    //定义全局tag
 VM.add(PlayerShipModel, 'PlayerShipModel');

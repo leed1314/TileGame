@@ -1,17 +1,27 @@
 import { waitForTime, MapNum, TruncateByVec2Mag } from "../Util/Tools";
 import PlayerCtrl, { ShipBhvType, WarnLevel } from "./PlayerCtrl";
-import { CannonModel } from "../UserModel/UserModel";
+import { CannonModel, GameDataRuntime } from "../UserModel/UserModel";
 import ShipConnon from "./ShipConnon";
 import BhvMove from "./BhvMove";
 import BhvFollowPath, { BhvFollowPathStatus, ShipPostureType } from "./BhvFollowPath";
 import MapCtrl from "./MapCtrl";
 import { GrounpType } from "./ConnonBullet";
 import GameInfoNotice, { InfoRadar } from "./GameInfoNotice";
+import { EnemyStrategyType } from "../UserModel/StroageModel";
+import GameInit from "./GameInit";
 
 const { ccclass, property } = cc._decorator;
 
 @ccclass
 export default class EnemyCtrl extends cc.Component {
+    @property({
+        type: cc.Enum(EnemyStrategyType),
+        tooltip: '使用的战术类型'
+    })
+    strategyType: EnemyStrategyType = 0;
+    strategyTypeInterval: number = 0.5; //每0.5秒决策一次
+    strategyTypeIntervalRuntime: number = 0; //每0.5秒决策一次
+
     // LIFE-CYCLE CALLBACKS:
     shipFireCheckInterval: number = 2;
     shipFireCheckIntervalRuntime: number = 0;
@@ -26,10 +36,10 @@ export default class EnemyCtrl extends cc.Component {
     radarScanInterval: number = 2; // 雷达扫描间隔
     runtimeRadarScanTime: number = 0;
     ShipName: string = "飞翔的荷兰人";
-    _HP: number = 1000;
+    _HP: number = 200;
     _FireRange: number = 200; // 火炮射程
     RadarRange: number = 400; // 雷达照射范围
-    currentHp: number = 1000;
+    currentHp: number = 200;
     _selfHealing: number = 1;
     selfHealingHPShowInterval: number = 3;
     selfHealingHPShowIntervalCounter: number = 0;
@@ -111,13 +121,18 @@ export default class EnemyCtrl extends cc.Component {
     // onLoad () {}
 
     start() {
+        // func test
+        this.setEnumyShipData(80, 200, 0.5, "路人A", 200, 400, 150, 150, 1
+            , new CannonModel(true, 200, 5, 4)
+            , new CannonModel(true, 200, 5, 4)
+            , new CannonModel(true, 200, 5, 4)
+            , new CannonModel(true, 200, 5, 4));
+        this.setEnumyExterData(0, 200, 10, 0, 10, 0, 0, 0, 0, 0, 0, 0);
+
+
         this.UpdateGunSet();
         this.HpProgressNode.getComponent(cc.ProgressBar).progress = this.currentHp / this.HP; //初始化血条
         this.onHPChange(0);
-
-        // func test
-        // this.setEnumyShipData();
-        this.setEnumyExterData(-100, 200, 10, 0, 10, 0, 0, 0, 0, 0, 0, 0);
     }
     UpdateGunSet() {
         if (this.leftFontConnon != null && this.leftFontConnon.isActive == true) {
@@ -174,7 +189,10 @@ export default class EnemyCtrl extends cc.Component {
     }
     // 用来设置 舰艇的数据， 如果不重置则使用默认值
     setEnumyShipData(MaxSpeed: number, MaxForce: number, radarScanInterval: number, ShipName: string, FireRange: number, RadarRange: number, HP: number, currentHp: number, selfHealing: number,
-        leftFontConnon: CannonModel) {
+        leftFontConnon: CannonModel
+        , leftBackConnon: CannonModel
+        , rightFontConnon: CannonModel
+        , rightBackConnon: CannonModel) {
         this.MaxSpeed = MaxSpeed;
         this.MaxForce = MaxForce;
         this.radarScanInterval = radarScanInterval;
@@ -185,6 +203,9 @@ export default class EnemyCtrl extends cc.Component {
         this.currentHp = currentHp;
         this.selfHealing = selfHealing;
         this.leftFontConnon = leftFontConnon;
+        this.leftBackConnon = leftBackConnon;
+        this.rightFontConnon = rightFontConnon;
+        this.rightBackConnon = rightBackConnon;
     }
     update(dt) {
         this.HpProgressNode.angle = this.node.angle * -1;  // 纠正血条的角度
@@ -240,6 +261,13 @@ export default class EnemyCtrl extends cc.Component {
         } else {
             this.selfHealingHPShowIntervalCounter += dt;
         }
+        //ai 决策管理
+        if (this.strategyTypeIntervalRuntime >= this.strategyTypeInterval) {
+            this.strategyTypeIntervalRuntime = 0;
+            this.strategyUpdate();
+        } else {
+            this.strategyTypeIntervalRuntime += dt;
+        }
     }
     enterCombat() {
         let sailNode = this.node.getChildByName("shipSail");
@@ -279,6 +307,21 @@ export default class EnemyCtrl extends cc.Component {
         }
         if (this.rightBackConnon.isActive == true) {
             this.rightBackConnonNode.getComponent(ShipConnon).aim(firePos);
+        }
+    }
+    strategyUpdate() {
+        if (this.strategyType == EnemyStrategyType.CatchAndFire) {
+            let spawnNode = cc.find("Canvas/playerSpawn");
+            let playerList = spawnNode.getComponentsInChildren(PlayerCtrl);
+            if (playerList.length > 0) {
+                for (var i = 0; i < playerList.length; i++) {
+                    let enumyCtrlTs = playerList[i];
+                    let mapCtrlTs = cc.find("Canvas/TiledMap").getComponent(MapCtrl);
+                    let playerIndex = mapCtrlTs.convertTileMapNodePositionToTileIndex(enumyCtrlTs.node.position);
+                    this.moveInPath(playerIndex);
+                    break;
+                }
+            }
         }
     }
     moveInPath(targetTileIndex: cc.Vec2) {
@@ -330,6 +373,14 @@ export default class EnemyCtrl extends cc.Component {
         this.fireEffectNode.addChild(fireEffect);
     }
     onSink() {
+        GameDataRuntime.exp += GameDataRuntime.expPerEnemy;
+        if (GameDataRuntime.exp >= GameDataRuntime.exp_max) {
+            GameDataRuntime.exp = 0;
+            GameDataRuntime.level++;
+            GameDataRuntime.skill_point++;
+            cc.find("Canvas/GameInfoNotice").getComponent(GameInfoNotice).CastGameInfo(new InfoRadar("等级提升"));
+        }
+        cc.find("Canvas/GameInit").getComponent(GameInit).onEnemyDestory();
         // 沉没效果
         cc.find("Canvas/GameInfoNotice").getComponent(GameInfoNotice).CastGameInfo(new InfoRadar(this.ShipName + "被我方击沉"));
         let sinkEffect = cc.instantiate(this.shipSinkEffect);
@@ -338,7 +389,6 @@ export default class EnemyCtrl extends cc.Component {
         this.node.destroy();
     }
     onHPChange(deltaHP: number, noShowAction?: boolean, skillAparKillerChance?: number) {
-        console.log("onHPChange");
         let from = this.currentHp;
         if (deltaHP > 0) {
             if (this.currentHp + deltaHP > this.HP) {
@@ -374,7 +424,6 @@ export default class EnemyCtrl extends cc.Component {
     isInCanbat() {
         let spawnNode = cc.find("Canvas/playerSpawn");
         let enemyList = spawnNode.getComponentsInChildren(PlayerCtrl);
-        console.log("findEnemyTarget length", enemyList.length);
         if (enemyList.length > 0) {
             let isAnyOneInFireRange = false;
             let isAnyOneInRadarRange = false;

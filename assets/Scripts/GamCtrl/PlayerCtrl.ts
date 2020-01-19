@@ -10,6 +10,7 @@ import GameInfoNotice, { InfoRadar } from "./GameInfoNotice";
 import EnemyInfoDot from "./EnemyInfoDot";
 import { CannonModel, ShipModel, PlayerShipModel } from "../UserModel/UserModel";
 import { PlayerSKills } from "../UserModel/StroageModel";
+import UIRoot from "./UIRoot";
 
 const { ccclass, property } = cc._decorator;
 export enum ShipBhvType {
@@ -198,6 +199,9 @@ export default class PlayerCtrl extends cc.Component {
     // 4炮位 实例
     @property(cc.Node)
     rightBackConnonNode: cc.Node = null;
+    // 航行位置标识
+    @property(cc.Prefab)
+    shipAnchor: cc.Prefab = null;
 
     @property(cc.Prefab)
     shipSinkEffect: cc.Prefab = null;
@@ -363,10 +367,10 @@ export default class PlayerCtrl extends cc.Component {
         let sinkEffect = cc.instantiate(this.shipSinkEffect);
         sinkEffect.position = this.node.position;
         this.node.parent.addChild(sinkEffect);
+        cc.find("Canvas/UIRoot").getComponent(UIRoot).showMainMenu(2);
         this.node.destroy();
     }
     onHPChange(deltaHP: number, noShowAction?: boolean, skillAparKillerChance?: number) {
-        console.log("onHPChange");
         let from = this.currentHp;
         if (deltaHP >= 0) {
             if (this.currentHp + deltaHP > this.HP) {
@@ -392,6 +396,7 @@ export default class PlayerCtrl extends cc.Component {
             if (this.currentHp + deltaHP <= 0) {
                 //  销毁对象
                 this.onSink();
+                this.currentHp = this.HP / 2; // 为下次保留一半HP
             } else {
                 this.currentHp += deltaHP;
             }
@@ -404,7 +409,6 @@ export default class PlayerCtrl extends cc.Component {
     isInCanbat() {
         let spawnNode = cc.find("Canvas/playerSpawn");
         let enemyList = spawnNode.getComponentsInChildren(EnemyCtrl);
-        console.log("findEnemyTarget length", enemyList.length);
         if (enemyList.length > 0) {
             let isAnyOneInFireRange = false;
             let isAnyOneInRadarRange = false;
@@ -426,7 +430,6 @@ export default class PlayerCtrl extends cc.Component {
     findEnemyTarget() {
         let spawnNode = cc.find("Canvas/playerSpawn");
         let enemyList = spawnNode.getComponentsInChildren(EnemyCtrl);
-        console.log("findEnemyTarget length", enemyList.length);
         if (enemyList.length > 0) {
             let isAnyOneInFireRange = false;
             let isAnyOneInRadarRange = false;
@@ -544,6 +547,12 @@ export default class PlayerCtrl extends cc.Component {
     moveInPath(targetTileIndex: cc.Vec2) {
         this.currentRunningBhv = ShipBhvType.MoveInPath;
         this.node.getComponent(BhvFollowPath).init(targetTileIndex);
+
+        let anchor = cc.instantiate(this.shipAnchor);
+        let mapCtrlTs = cc.find("Canvas/TiledMap").getComponent(MapCtrl);
+        let enemyPosition = mapCtrlTs.convertTilemapIndexToMapNodePosition(targetTileIndex);
+        anchor.position = enemyPosition
+        this.node.parent.addChild(anchor);
     }
 
     /**

@@ -335,3 +335,47 @@ export let ConfigSkills = [
         type: 0,  //技能类型 0 - 主动技能 1- 被动技能 2- buff技能
     },
 ]
+
+export enum EnemyStrategyType {
+    CatchAndFire = 0, // 贴脸强撸战术,xb打
+    MoveAndFire, // 在射程边界放冷枪
+}
+
+export let EnemyWave = [
+    {
+        name: '小喽啰',
+        info: '都是垃圾，送经验',
+        enemys: [
+            {
+                strategy: EnemyStrategyType.CatchAndFire,
+            }
+        ],
+    },
+    {
+        name: '小喽啰',
+        info: '都是垃圾，送经验',
+        enemys: [
+            {
+                strategy: EnemyStrategyType.CatchAndFire,
+            },
+            {
+                strategy: EnemyStrategyType.MoveAndFire,
+            },
+        ],
+    },
+    {
+        name: '小喽啰',
+        info: '都是垃圾，送经验',
+        enemys: [
+            {
+                strategy: EnemyStrategyType.CatchAndFire,
+            },
+            {
+                strategy: EnemyStrategyType.CatchAndFire,
+            },
+            {
+                strategy: EnemyStrategyType.MoveAndFire,
+            },
+        ],
+    },
+]

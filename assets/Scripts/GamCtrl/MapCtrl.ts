@@ -67,6 +67,11 @@ export default class MapCtrl extends cc.Component {
         let path = b.ShowMeThePath();
         return path;
     }
+    isSailable(x, y) {
+        let pathLayer = this.getComponent(cc.TiledMap).getLayer("SailPath");
+        let targetTile = this.getComponent(cc.TiledMap).getPropertiesForGID(pathLayer.getTileGIDAt(x, y));
+        return targetTile.isSailable;
+    }
     convertTilemapIndexToMapNodePosition(index: cc.Vec2) {
         let touchX = index.x;
         let touchY = index.y;

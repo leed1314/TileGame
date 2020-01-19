@@ -58,7 +58,7 @@
       "__type__": "TypedArray",
       "ctor": "Float64Array",
       "array": [
-        -200,
+        0,
         12.599999999999989,
         0,
         0,
@@ -187,7 +187,7 @@
     "asset": {
       "__uuid__": "06068ca9-d322-4687-b44b-1139062c2a64"
     },
-    "fileId": "f1akeeksVHUZOpo3HEurmK",
+    "fileId": "8dxVXAvD5GVJlRNO2mOXbK",
     "sync": false
   },
   {
@@ -246,7 +246,7 @@
     },
     "_enabled": true,
     "bhvType": 0,
-    "delayTime": 3,
+    "delayTime": 5,
     "fadeoutTime": 1,
     "_id": ""
   },
