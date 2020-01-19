@@ -22,6 +22,8 @@ export default class ConnonBullet extends cc.Component {
     belongGroup: GrounpType = -1;
 
     flyDistance: cc.Vec2 = cc.Vec2.ZERO;
+
+    _skillAparKillerChance: number = 0;
     // LIFE-CYCLE CALLBACKS:
 
     // onLoad () {}
@@ -63,7 +65,8 @@ export default class ConnonBullet extends cc.Component {
      * @param speed 飞多快
      * @param damage 造成多少伤害
      */
-    init(direction: cc.Vec2, shotDistance: number, speed: number, damage: number, shotUnitUUid: string, belongGroup: GrounpType, belongToShipName: string) {
+    init(direction: cc.Vec2, shotDistance: number, speed: number, damage: number, shotUnitUUid: string, belongGroup: GrounpType, belongToShipName: string
+        , _skillAparKillerChance: number) {
         this.shotDistance = shotDistance;
         this.direction = direction;
         this.speed = speed;
@@ -71,6 +74,7 @@ export default class ConnonBullet extends cc.Component {
         this.shotUnitUUid = shotUnitUUid;
         this.belongGroup = belongGroup;
         this.belongToShipName = belongToShipName;
+        this._skillAparKillerChance = _skillAparKillerChance;
     }
     onCollisionEnter(other, self) {
         console.log("onCollisionEnter", other.node.name, self.node.name);
@@ -94,12 +98,12 @@ export default class ConnonBullet extends cc.Component {
         }
         if (otherNode.getComponent(EnemyCtrl)) {
             console.log("命中 enemy，进行伤害结算");
-            otherNode.getComponent(EnemyCtrl).onHPChange(this.damage * -1);
+            otherNode.getComponent(EnemyCtrl).onHPChange(this.damage * -1, false, this._skillAparKillerChance);
             cc.find("Canvas/GameInfoNotice").getComponent(GameInfoNotice).CastGameInfo(new infoDamage(this.belongToShipName, otherNode.getComponent(EnemyCtrl).ShipName, this.damage));
         }
         if (otherNode.getComponent(PlayerCtrl)) {
             console.log("命中 PlayerCtrl ，进行伤害结算");
-            otherNode.getComponent(PlayerCtrl).onHPChange(this.damage * -1);
+            otherNode.getComponent(PlayerCtrl).onHPChange(this.damage * -1, false, this._skillAparKillerChance);
             cc.find("Canvas/GameInfoNotice").getComponent(GameInfoNotice).CastGameInfo(new infoDamage(this.belongToShipName, otherNode.getComponent(PlayerCtrl).ShipName, this.damage));
         }
         this.fireWorkAndSelfDestory();

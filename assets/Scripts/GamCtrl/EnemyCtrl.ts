@@ -26,10 +26,10 @@ export default class EnemyCtrl extends cc.Component {
     radarScanInterval: number = 2; // 雷达扫描间隔
     runtimeRadarScanTime: number = 0;
     ShipName: string = "飞翔的荷兰人";
-    _HP: number = 100;
-    _FireRange: number = 300; // 火炮射程
+    _HP: number = 1000;
+    _FireRange: number = 200; // 火炮射程
     RadarRange: number = 400; // 雷达照射范围
-    currentHp: number = 100;
+    currentHp: number = 1000;
     _selfHealing: number = 1;
     selfHealingHPShowInterval: number = 3;
     selfHealingHPShowIntervalCounter: number = 0;
@@ -61,14 +61,17 @@ export default class EnemyCtrl extends cc.Component {
     set selfHealing(val) {
         this._selfHealing = val;
     }
+    // buff
+    positionLocked: number = 0;// 禁止移动
+
     // 左舷前位炮
-    leftFontConnon: CannonModel = new CannonModel(true, 300, 15, 3);
+    leftFontConnon: CannonModel = new CannonModel(true, 300, 5, 3);
     // 左舷后位炮
-    leftBackConnon: CannonModel = new CannonModel(true, 300, 15, 3);
+    leftBackConnon: CannonModel = new CannonModel(true, 300, 5, 3);
     // 右舷前位炮
-    rightFontConnon: CannonModel = new CannonModel(true, 300, 15, 3);
+    rightFontConnon: CannonModel = new CannonModel(true, 300, 5, 3);
     // 右舷后位炮
-    rightBackConnon: CannonModel = new CannonModel(true, 300, 15, 3);
+    rightBackConnon: CannonModel = new CannonModel(true, 300, 5, 3);
 
     // 增强属性
     connonSpeedAdd: number = 0;// 炮弹飞行速度增幅
@@ -113,7 +116,8 @@ export default class EnemyCtrl extends cc.Component {
         this.onHPChange(0);
 
         // func test
-        // this.setEnumyExterData(-200, 200, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+        // this.setEnumyShipData();
+        this.setEnumyExterData(-100, 200, 10, 0, 10, 0, 0, 0, 0, 0, 0, 0);
     }
     UpdateGunSet() {
         if (this.leftFontConnon != null && this.leftFontConnon.isActive == true) {
@@ -195,21 +199,25 @@ export default class EnemyCtrl extends cc.Component {
 
         // 航行管理
         if (this.currentRunningBhv == ShipBhvType.MoveInPath) {
-            let bhvMoveTs = this.getComponent(BhvMove);
-            let bhvFollowPathTs = this.node.getComponent(BhvFollowPath)
-            if (bhvFollowPathTs.currentRunningStatus == BhvFollowPathStatus.Finshed) { // 意味着已经到达前进节点
-                this.currentRunningBhv = ShipBhvType.Idle;
-                return;
+            if (this.positionLocked > 0) {
+                this.positionLocked -= dt;
+            } else {
+                let bhvMoveTs = this.getComponent(BhvMove);
+                let bhvFollowPathTs = this.node.getComponent(BhvFollowPath)
+                if (bhvFollowPathTs.currentRunningStatus == BhvFollowPathStatus.Finshed) { // 意味着已经到达前进节点
+                    this.currentRunningBhv = ShipBhvType.Idle;
+                    return;
+                }
+                // 计算行为合力
+                let posNextPath = bhvFollowPathTs.currentPathPoint == null ? this.node.position : bhvFollowPathTs.currentPathPoint;
+                let responseLevel = 1;
+                if (bhvFollowPathTs.currentPosture = ShipPostureType.Turning) {
+                    responseLevel *= this.TruningSpeedRatio;
+                }
+                let steeringForce = bhvMoveTs.Seek(this.node.position, posNextPath, this.MaxSpeed * responseLevel);
+                steeringForce = TruncateByVec2Mag(this.MaxForce, steeringForce);
+                bhvMoveTs.steeringForceApply(steeringForce, dt, this.MaxSpeed);
             }
-            // 计算行为合力
-            let posNextPath = bhvFollowPathTs.currentPathPoint == null ? this.node.position : bhvFollowPathTs.currentPathPoint;
-            let responseLevel = 1;
-            if (bhvFollowPathTs.currentPosture = ShipPostureType.Turning) {
-                responseLevel *= this.TruningSpeedRatio;
-            }
-            let steeringForce = bhvMoveTs.Seek(this.node.position, posNextPath, this.MaxSpeed * responseLevel);
-            steeringForce = TruncateByVec2Mag(this.MaxForce, steeringForce);
-            bhvMoveTs.steeringForceApply(steeringForce, dt, this.MaxSpeed);
         }
         // 雷达扫描及其火力管理
         if (this.runtimeRadarScanTime >= this.radarScanInterval) {
@@ -222,7 +230,10 @@ export default class EnemyCtrl extends cc.Component {
         if (this.selfHealingHPShowIntervalCounter > this.selfHealingHPShowInterval) {
             this.selfHealingHPShowIntervalCounter = 0;
             if (this.isInCanbat() == true) {
-
+                if (this.skillFastRepair > 0) {
+                    let hpHeal = Math.ceil(this.selfHealingHPShowInterval * this.selfHealing * this.skillFastRepair / 100);
+                    this.onHPChange(hpHeal, true);
+                }
             } else {
                 this.onHPChange(this.selfHealingHPShowInterval * this.selfHealing);
             }
@@ -320,13 +331,13 @@ export default class EnemyCtrl extends cc.Component {
     }
     onSink() {
         // 沉没效果
-        cc.find("Canvas/GameInfoNotice").getComponent(GameInfoNotice).CastGameInfo(new InfoRadar(this.ShipName + "光荣沉没"));
+        cc.find("Canvas/GameInfoNotice").getComponent(GameInfoNotice).CastGameInfo(new InfoRadar(this.ShipName + "被我方击沉"));
         let sinkEffect = cc.instantiate(this.shipSinkEffect);
         sinkEffect.position = this.node.position;
         this.node.parent.addChild(sinkEffect);
         this.node.destroy();
     }
-    onHPChange(deltaHP: number, noShowAction?: boolean) {
+    onHPChange(deltaHP: number, noShowAction?: boolean, skillAparKillerChance?: number) {
         console.log("onHPChange");
         let from = this.currentHp;
         if (deltaHP > 0) {
@@ -336,6 +347,19 @@ export default class EnemyCtrl extends cc.Component {
                 this.currentHp += deltaHP;
             }
         } else {
+            if (skillAparKillerChance > 0) {
+                let randomNum = Math.random() * 100;
+                if (randomNum < skillAparKillerChance) {
+                    this.positionLocked = 2;
+                    cc.find("Canvas/GameInfoNotice").getComponent(GameInfoNotice).CastGameInfo(new InfoRadar(this.ShipName + "被 桅杆杀手 命中"));
+                }
+            }
+            if (this.skillLuckyWave > 0) {
+                let randomNum = Math.random() * 100;
+                if (randomNum < this.skillLuckyWave) {
+                    return;
+                }
+            }
             if (this.currentHp + deltaHP <= 0) {
                 //  销毁对象
                 this.onSink();

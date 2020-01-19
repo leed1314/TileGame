@@ -96,7 +96,23 @@ export default class ShipConnon extends cc.Component {
         if (this.isReload == true) {
             this.isReload = false;
             this.runtimeReloadTime = 0;
-
+            if (this._skillFastShootChance > 0) {
+                let randomNum = Math.random() * 100;
+                if (randomNum < this._skillFastShootChance) {
+                    this.runtimeReloadTime = this.reloadTime - 0.5;
+                    if (GrounpType.Player == this.belongTo) {
+                        cc.find("Canvas/GameInfoNotice").getComponent(GameInfoNotice).CastGameInfo(new InfoConnon(this.ConnonName, "急速射击"));
+                    }
+                }
+            }
+            let critTimes = 1;
+            if (this._skillCritShootChance > 0) {
+                let randomNum = Math.random() * 100;
+                if (randomNum < this._skillCritShootChance) {
+                    critTimes = 2;
+                    cc.find("Canvas/GameInfoNotice").getComponent(GameInfoNotice).CastGameInfo(new InfoConnon(this.ConnonName, "毁灭射击"));
+                }
+            }
             let mapNode = cc.find("Canvas/TiledMap");
             let bulletSpawnNode = cc.find("Canvas/BulletSpawn");
             let selfBulletSpawnPosNode = this.node.getChildByName("bulletSpawnPos");
@@ -108,7 +124,8 @@ export default class ShipConnon extends cc.Component {
             this.node.getComponent(cc.Animation).play("ConnonFireShake");
 
             let cannonBall = cc.instantiate(this.connonBullet);
-            cannonBall.getComponent(ConnonBullet).init(shotDirection, shotDirection.mag(), this.bulletSpeed, this.bulletDamage, this.belongToUUid, this.belongTo, this.belongToShipName);
+            cannonBall.getComponent(ConnonBullet).init(shotDirection, shotDirection.mag(), this.bulletSpeed, this.bulletDamage * critTimes, this.belongToUUid, this.belongTo, this.belongToShipName
+                , this._skillAparKillerChance);
             cannonBall.position = selfBulletSpawnPosInMap;
             bulletSpawnNode.addChild(cannonBall);
 

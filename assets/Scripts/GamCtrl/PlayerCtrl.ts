@@ -34,9 +34,9 @@ export default class PlayerCtrl extends cc.Component {
      * 如果 MaxForce 过大会出现转向时加速度变化过快，同样出现无法到达终点
      */
     _MaxSpeed: number = 100; //单位: 像素/秒
-    MaxForce: number = 200;
+    MaxForce: number = 300;
     TruningSpeedRatio: number = 5; // 转向加力系数
-    radarScanInterval: number = 2; // 雷达扫描间隔
+    radarScanInterval: number = 0.6; // 雷达扫描间隔
     runtimeRadarScanTime: number = 0;
     ShipName: string = "黑珍珠";
     _HP: number = 100;
@@ -82,7 +82,8 @@ export default class PlayerCtrl extends cc.Component {
     set selfHealing(val) {
         this._selfHealing = val;
     }
-
+    // buff
+    positionLocked: number = 0;// 禁止移动
     // 增强属性
     _connonSpeedAdd: number = 0;// 炮弹飞行速度增幅
     _connonRangeAdd: number = 0;// 炮弹射程增幅
@@ -269,21 +270,25 @@ export default class PlayerCtrl extends cc.Component {
         }
         // 航行管理
         if (this.currentRunningBhv == ShipBhvType.MoveInPath) {
-            let bhvMoveTs = this.getComponent(BhvMove);
-            let bhvFollowPathTs = this.node.getComponent(BhvFollowPath)
-            if (bhvFollowPathTs.currentRunningStatus == BhvFollowPathStatus.Finshed) { // 意味着已经到达前进节点
-                this.currentRunningBhv = ShipBhvType.Idle;
-                return;
+            if (this.positionLocked > 0) {
+                this.positionLocked -= dt;
+            } else {
+                let bhvMoveTs = this.getComponent(BhvMove);
+                let bhvFollowPathTs = this.node.getComponent(BhvFollowPath)
+                if (bhvFollowPathTs.currentRunningStatus == BhvFollowPathStatus.Finshed) { // 意味着已经到达前进节点
+                    this.currentRunningBhv = ShipBhvType.Idle;
+                    return;
+                }
+                // 计算行为合力
+                let posNextPath = bhvFollowPathTs.currentPathPoint == null ? this.node.position : bhvFollowPathTs.currentPathPoint;
+                let responseLevel = 1;
+                if (bhvFollowPathTs.currentPosture = ShipPostureType.Turning) {
+                    responseLevel *= this.TruningSpeedRatio;
+                }
+                let steeringForce = bhvMoveTs.Seek(this.node.position, posNextPath, this.MaxSpeed * responseLevel);
+                steeringForce = TruncateByVec2Mag(this.MaxForce, steeringForce);
+                bhvMoveTs.steeringForceApply(steeringForce, dt, this.MaxSpeed);
             }
-            // 计算行为合力
-            let posNextPath = bhvFollowPathTs.currentPathPoint == null ? this.node.position : bhvFollowPathTs.currentPathPoint;
-            let responseLevel = 1;
-            if (bhvFollowPathTs.currentPosture = ShipPostureType.Turning) {
-                responseLevel *= this.TruningSpeedRatio;
-            }
-            let steeringForce = bhvMoveTs.Seek(this.node.position, posNextPath, this.MaxSpeed * responseLevel);
-            steeringForce = TruncateByVec2Mag(this.MaxForce, steeringForce);
-            bhvMoveTs.steeringForceApply(steeringForce, dt, this.MaxSpeed);
         }
         // 雷达扫描及其火力管理
         if (this.runtimeRadarScanTime >= this.radarScanInterval) {
@@ -296,7 +301,11 @@ export default class PlayerCtrl extends cc.Component {
         if (this.selfHealingHPShowIntervalCounter > this.selfHealingHPShowInterval) {
             this.selfHealingHPShowIntervalCounter = 0;
             if (this.isInCanbat() == true) {
-
+                if (this.skillFastRepair > 0) {
+                    let hpHeal = Math.ceil(this.selfHealingHPShowInterval * this.selfHealing * this.skillFastRepair / 100);
+                    this.onHPChange(hpHeal, true);
+                    cc.find("Canvas/GameInfoNotice").getComponent(GameInfoNotice).CastGameInfo(new InfoRadar("战斗中回复 +" + hpHeal));
+                }
             } else {
                 this.onHPChange(this.selfHealingHPShowInterval * this.selfHealing);
             }
@@ -350,22 +359,36 @@ export default class PlayerCtrl extends cc.Component {
     }
     onSink() {
         // 沉没效果
-        cc.find("Canvas/GameInfoNotice").getComponent(GameInfoNotice).CastGameInfo(new InfoRadar(this.ShipName + "光荣沉没"));
+        cc.find("Canvas/GameInfoNotice").getComponent(GameInfoNotice).CastGameInfo(new InfoRadar(this.ShipName + " 光荣沉没,大侠请重新来过"));
         let sinkEffect = cc.instantiate(this.shipSinkEffect);
         sinkEffect.position = this.node.position;
         this.node.parent.addChild(sinkEffect);
         this.node.destroy();
     }
-    onHPChange(deltaHP: number, noShowAction?: boolean) {
+    onHPChange(deltaHP: number, noShowAction?: boolean, skillAparKillerChance?: number) {
         console.log("onHPChange");
         let from = this.currentHp;
-        if (deltaHP > 0) {
+        if (deltaHP >= 0) {
             if (this.currentHp + deltaHP > this.HP) {
                 this.currentHp = this.HP;
             } else {
                 this.currentHp += deltaHP;
             }
         } else {
+            if (skillAparKillerChance > 0) {
+                let randomNum = Math.random() * 100;
+                if (randomNum < skillAparKillerChance) {
+                    cc.find("Canvas/GameInfoNotice").getComponent(GameInfoNotice).CastGameInfo(new InfoRadar("我方被 桅杆杀手 命中"));
+                    this.positionLocked = 2;
+                }
+            }
+            if (this.skillLuckyWave > 0) {
+                let randomNum = Math.random() * 100;
+                if (randomNum < this.skillLuckyWave) {
+                    cc.find("Canvas/GameInfoNotice").getComponent(GameInfoNotice).CastGameInfo(new InfoRadar("幸运海浪触发 伤害抵抗"));
+                    return;
+                }
+            }
             if (this.currentHp + deltaHP <= 0) {
                 //  销毁对象
                 this.onSink();
@@ -424,20 +447,20 @@ export default class PlayerCtrl extends cc.Component {
             if (isAnyOneInRadarRange) {
                 if (this.currentWarnLevel == WarnLevel.none) {
                     this.currentWarnLevel = WarnLevel.EnemyInView;
-                    cc.find("Canvas/GameInfoNotice").getComponent(GameInfoNotice).CastGameInfo(new InfoRadar("发现" + enemyList.length + "艘敌舰,准备战斗"));
+                    cc.find("Canvas/GameInfoNotice").getComponent(GameInfoNotice).CastGameInfo(new InfoRadar("警戒:发现" + enemyList.length + "艘敌舰"));
                     this.enterCombat();
                 }
             } else {
                 if (this.currentWarnLevel != WarnLevel.none) {
                     this.currentWarnLevel = WarnLevel.none;
-                    cc.find("Canvas/GameInfoNotice").getComponent(GameInfoNotice).CastGameInfo(new InfoRadar("警报解除"));
+                    cc.find("Canvas/GameInfoNotice").getComponent(GameInfoNotice).CastGameInfo(new InfoRadar("退出战斗"));
                     this.exitCombat();
                 }
             }
             if (isAnyOneInFireRange) {
                 if (this.currentWarnLevel != WarnLevel.EnemyInShotRange) {
                     this.currentWarnLevel = WarnLevel.EnemyInShotRange;
-                    cc.find("Canvas/GameInfoNotice").getComponent(GameInfoNotice).CastGameInfo(new InfoRadar("进入射程,开火"));
+                    cc.find("Canvas/GameInfoNotice").getComponent(GameInfoNotice).CastGameInfo(new InfoRadar("进入战斗,开火"));
                 }
                 // 进入射程开火
                 this.aim(enemyInFireRange.node.position);
@@ -445,13 +468,13 @@ export default class PlayerCtrl extends cc.Component {
             } else {
                 if (this.currentWarnLevel == WarnLevel.EnemyInShotRange) {
                     this.currentWarnLevel = WarnLevel.EnemyInView;
-                    cc.find("Canvas/GameInfoNotice").getComponent(GameInfoNotice).CastGameInfo(new InfoRadar("超出了射程"));
+                    cc.find("Canvas/GameInfoNotice").getComponent(GameInfoNotice).CastGameInfo(new InfoRadar("超出了我方火炮射程"));
                 }
             }
         } else {
             if (this.currentWarnLevel != WarnLevel.none) {
                 this.currentWarnLevel = WarnLevel.none;
-                cc.find("Canvas/GameInfoNotice").getComponent(GameInfoNotice).CastGameInfo(new InfoRadar("警报解除"));
+                cc.find("Canvas/GameInfoNotice").getComponent(GameInfoNotice).CastGameInfo(new InfoRadar("退出战斗"));
                 this.exitCombat();
             }
         }
