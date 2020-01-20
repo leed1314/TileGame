@@ -192,7 +192,7 @@
       "array": [
         0,
         0,
-        527.4094709047232,
+        623.5382907247958,
         0,
         0,
         0,
@@ -227,9 +227,9 @@
     "_clearFlags": 7,
     "_backgroundColor": {
       "__type__": "cc.Color",
-      "r": 176,
-      "g": 233,
-      "b": 252,
+      "r": 44,
+      "g": 185,
+      "b": 231,
       "a": 255
     },
     "_depth": -1,
@@ -290,7 +290,7 @@
       "array": [
         0,
         0,
-        527.4094709047232,
+        623.5382907247958,
         0,
         0,
         0,
@@ -6113,7 +6113,7 @@
     "_groupIndex": 0,
     "groupIndex": 0,
     "showInEditor": false,
-    "_id": "bbz4AfHeVO2pfDY0/w+RYJ"
+    "_id": "a6cVYcQ9RBCZdRRzRHbrVY"
   },
   {
     "__type__": "cc.Label",
@@ -6143,7 +6143,7 @@
     "_N$fontFamily": "Arial",
     "_N$overflow": 0,
     "_N$cacheMode": 0,
-    "_id": "5aVxJeuOtPK5aaUwoA8zBb"
+    "_id": "459Mh0/vJJL6Kq4pktCbpv"
   },
   {
     "__type__": "cc.PrivateNode",
@@ -6206,7 +6206,7 @@
     "_groupIndex": 0,
     "groupIndex": 0,
     "showInEditor": false,
-    "_id": "710TpXfJBKZJbdZMfTzejk"
+    "_id": "06hQvAvEBM1odxCOrSMqvh"
   },
   {
     "__type__": "cc.Label",
@@ -6236,7 +6236,7 @@
     "_N$fontFamily": "Arial",
     "_N$overflow": 0,
     "_N$cacheMode": 0,
-    "_id": "ffZTshA0xFxo6CTqVmELT8"
+    "_id": "24wT210wdFoooEt4+7+IuG"
   },
   {
     "__type__": "cc.RichText",
@@ -6437,7 +6437,7 @@
     "_groupIndex": 0,
     "groupIndex": 0,
     "showInEditor": false,
-    "_id": "c3nFq3W8VMFI//JYwO3vck"
+    "_id": "48EoI+rKhMPpdST1KyZx6Z"
   },
   {
     "__type__": "cc.Label",
@@ -6467,7 +6467,7 @@
     "_N$fontFamily": "Arial",
     "_N$overflow": 0,
     "_N$cacheMode": 0,
-    "_id": "ffh8YgP3VFJJVIo4reAApJ"
+    "_id": "f1PZLrcY9OibpVOGvMsf9v"
   },
   {
     "__type__": "cc.PrivateNode",
@@ -6530,7 +6530,7 @@
     "_groupIndex": 0,
     "groupIndex": 0,
     "showInEditor": false,
-    "_id": "3bF+ht7+RGoIsBwf/4vF/F"
+    "_id": "d6qT2nM7NGXK2IbK1EEIKj"
   },
   {
     "__type__": "cc.Label",
@@ -6560,7 +6560,7 @@
     "_N$fontFamily": "Arial",
     "_N$overflow": 0,
     "_N$cacheMode": 0,
-    "_id": "c4n5hnj19OXbrDwSUFeXpc"
+    "_id": "36iAZLp29LRpIf9nwbKg0p"
   },
   {
     "__type__": "cc.RichText",
